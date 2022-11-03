@@ -1,0 +1,13 @@
+[package]
+name = "rspotify-cli"
+version = "0.1.0"
+authors = ["es183923"]
+edition = "2021"
+description = "A cli to get information and control Spotify."
+
+[dependencies]
+clap = { version = "4.0.18", features = ["derive", "cargo", "env", "color", "wrap_help"] }
+rspotify = { version = "0.11", features = ["cli"] }
+snafu = "0.7.3"
+tokio = { version = "1.21.2", features = ["full"] }
+
