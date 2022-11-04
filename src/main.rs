@@ -8,15 +8,21 @@
     unused_qualifications
 )]
 
+mod config;
 mod currently_playing;
 mod error;
+mod pretty_duration;
 
-use std::{fs, path::PathBuf};
-
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config, Credentials, OAuth};
 
-use crate::{currently_playing::CurrentlyPlaying, error::Error};
+use crate::{
+    config::{get_config_path, ConfigFile},
+    currently_playing::CurrentlyPlaying,
+    error::Error,
+    pretty_duration::PrettyDuration,
+};
 
 #[derive(Debug, Parser, Clone)]
 #[command(
@@ -30,8 +36,6 @@ use crate::{currently_playing::CurrentlyPlaying, error::Error};
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
-    // #[arg(short, long, value_name = "FILE")]
-    // config: Option<PathBuf>,
     #[arg(
         short = 'i',
         long,
@@ -86,38 +90,15 @@ enum Commands {
     ToggleLikeUnlike,
 }
 
-// todo: make this customizable thru settings
-// also make it go in ~/.config/spotify-cli
-const CACHE_PATH: &str = ".spotify_cache/";
-
-fn get_cache_path() -> PathBuf {
-    let project_dir_path = std::env::current_dir().unwrap();
-    let mut cache_path = project_dir_path;
-    cache_path.push(CACHE_PATH);
-    cache_path.push("token");
-
-    cache_path
-}
-
-fn create_cache_path_if_absent() -> PathBuf {
-    let cache_path = get_cache_path();
-    if !cache_path.exists() {
-        let mut path = cache_path.clone();
-        path.pop();
-        fs::create_dir_all(path).unwrap();
-    }
-    cache_path
-}
-
-async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify, Error> {
+async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
     let config = Config {
         token_cached: true,
-        cache_path: create_cache_path_if_absent(),
+        cache_path: get_config_path(ConfigFile::Token).context(Error::Config)?,
         ..Default::default()
     };
 
     let oauth = OAuth {
-        scopes: scopes!("user-read-currently-playing", "playlist-modify-private"),
+        scopes: scopes!("user-read-currently-playing"),
         redirect_uri: cli.redirect_uri,
         ..Default::default()
     };
@@ -126,42 +107,45 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify, Error> {
 
     let mut spotify = AuthCodeSpotify::with_config(creds, oauth, config);
 
-    let url = spotify.get_authorize_url(false)?;
-    spotify.prompt_for_token(&url).await.unwrap();
+    let url = spotify
+        .get_authorize_url(false)
+        .context(Error::AuthorizationURI)?;
+    spotify
+        .prompt_for_token(&url)
+        .await
+        .context(Error::AuthorizationURI)?;
 
     Ok(spotify)
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let spotify = init_spotify(cli.clone()).await.unwrap();
+    let spotify = init_spotify(cli.clone()).await.context(Error::NotRunning)?;
 
-    if let Ok(curr) = CurrentlyPlaying::new(spotify).await {
-        if let Some(command) = cli.command {
-            match command {
-                // commands that fetch the state
-                Commands::Debug => println!("{:#?}", curr),
-                Commands::Title => println!("{}", curr.title),
-                Commands::Artist => println!("{}", curr.artist),
-                Commands::Progress => println!("{:?}", curr.progress),
-                Commands::Duration => println!("{:?}", curr.duration),
-                Commands::Status => todo!(),
-                // commands that modify the state
-                Commands::Play => todo!(),
-                Commands::Pause => todo!(),
-                Commands::TogglePlayPause => todo!(),
-                Commands::Like => todo!(),
-                Commands::Unlike => todo!(),
-                Commands::ToggleLikeUnlike => todo!(),
-                #[allow(unreachable_patterns)]
-                _ => todo!(),
-            }
-        } else {
-            println!("{} - {}", curr.title, curr.artist);
+    let curr = CurrentlyPlaying::new(spotify)
+        .await
+        .context(Error::NotRunning)?;
+
+    if let Some(command) = cli.command {
+        match command {
+            // commands that fetch the state
+            Commands::Debug => Ok(println!("{:#?}", curr)),
+            Commands::Title => Ok(println!("{}", curr.title)),
+            Commands::Artist => Ok(println!("{}", curr.artist)),
+            Commands::Progress => Ok(println!("{}", curr.progress.pretty())),
+            Commands::Duration => Ok(println!("{}", curr.duration.pretty())),
+            Commands::Status => todo!(),
+            // commands that modify the state
+            Commands::Play => todo!(),
+            Commands::Pause => todo!(),
+            Commands::TogglePlayPause => todo!(),
+            Commands::Like => todo!(),
+            Commands::Unlike => todo!(),
+            Commands::ToggleLikeUnlike => todo!(),
         }
     } else {
-        println!("No music playing");
+        Ok(println!("{} - {}", curr.title, curr.artist))
     }
 }

@@ -1,20 +1,23 @@
 use rspotify::ClientError;
-use snafu::prelude::*;
+use thiserror::Error;
 
-#[derive(Debug, Snafu)]
+#[derive(Debug, Error)]
+#[allow(dead_code)]
 pub enum Error {
-    #[snafu(display("There is no client id found."))]
-    ClientId,
-    #[snafu(display("There is no client secret found."))]
-    ClientSecret,
-    #[snafu(display("Unable to create authorization URI."))]
+    #[error("The client id or client secret is invalid.")]
+    Auth,
+    #[error("Unable to create authorization URI.")]
     AuthorizationURI,
-    #[snafu(display("No Spotify client is connected."))]
-    NotConnected,
+    #[error("No Spotify client running.")]
+    NotRunning,
+    #[error("Can't open or create config dir.")]
+    Config,
+    #[error("Missing data in the track metadata. Please report this error.")]
+    MissingData,
 }
 
 impl From<ClientError> for Error {
     fn from(_: ClientError) -> Self {
-        Self::NotConnected
+        Self::NotRunning
     }
 }

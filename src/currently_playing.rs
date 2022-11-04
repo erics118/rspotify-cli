@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use anyhow::{Context, Result};
 use rspotify::{prelude::*, AuthCodeSpotify};
 
 use crate::error::Error;
@@ -13,22 +14,20 @@ pub struct CurrentlyPlaying {
 }
 
 impl CurrentlyPlaying {
-    pub async fn new(spotify: AuthCodeSpotify) -> Result<Self, Error> {
-        let curr = match spotify.current_user_playing_item().await {
-            Ok(a) => match a {
-                Some(b) => b,
-                None => return Err(Error::NotConnected),
-            },
-            Err(_) => return Err(Error::NotConnected),
-        };
+    pub async fn new(spotify: AuthCodeSpotify) -> Result<Self> {
+        let curr = spotify
+            .current_user_playing_item()
+            .await
+            .context(Error::NotRunning)?
+            .context(Error::NotRunning)?;
         match curr.item.unwrap() {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 title: t.name,
-                artist: t.artists.first().cloned().unwrap().name,
-                progress: curr.progress.unwrap(),
+                artist: t.artists.first().cloned().context(Error::MissingData)?.name,
+                progress: curr.progress.context(Error::MissingData)?,
                 duration: t.duration,
             }),
-            _ => todo!(),
+            rspotify::model::PlayableItem::Episode(_) => todo!(),
         }
     }
 }
