@@ -41,7 +41,7 @@ struct Cli {
         long,
         value_name = "CLIENT_ID",
         env = "SPOTIFY_CLIENT_ID",
-        required = true,
+        required = true
     )]
     client_id: String,
     #[arg(
@@ -49,7 +49,7 @@ struct Cli {
         long,
         value_name = "CLIENT_SECRET",
         env = "SPOTIFY_CLIENT_SECRET",
-        required = true,
+        required = true
     )]
     client_secret: String,
     #[arg(
@@ -119,8 +119,7 @@ async fn main() -> Result<()> {
 
     let spotify = init_spotify(cli.clone()).await?;
 
-    let curr = CurrentlyPlaying::new(spotify)
-        .await?;
+    let curr = CurrentlyPlaying::new(spotify).await?;
 
     if let Some(command) = cli.command {
         match command {
