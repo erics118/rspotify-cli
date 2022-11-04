@@ -26,7 +26,12 @@ impl CurrentlyPlaying {
                 progress: curr.progress.context(Error::MissingData)?,
                 duration: t.duration,
             }),
-            rspotify::model::PlayableItem::Episode(_) => todo!(),
+            rspotify::model::PlayableItem::Episode(t) => Ok(Self {
+                title: t.name,
+                artist: t.show.name,
+                progress: curr.progress.context(Error::MissingData)?,
+                duration: t.duration,
+            }),
         }
     }
 }
