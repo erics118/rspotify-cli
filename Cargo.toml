@@ -13,7 +13,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.66"
-clap = { version = "4.0.19", features = ["derive", "cargo", "env", "color", "wrap_help"] }
+clap = { version = "4.0.19", features = ["derive", "cargo", "env"] }
 dirs = "4.0.0"
 rspotify = { version = "0.11.5", features = ["cli"] }
 thiserror = "1.0.37"
