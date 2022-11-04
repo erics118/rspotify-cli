@@ -1,27 +1,26 @@
 repos:
-  - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v2.1.1
-    hooks:
-      - id: conventional-pre-commit
-        stages: [commit-msg]
-        args: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-      - id: cargo-check
-      - id: clippy
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
-    hooks:
-      - id: check-added-large-files
-      - id: check-case-conflict
-      - id: check-json
-      - id: check-shebang-scripts-are-executable
-      - id: check-symlinks
-      - id: check-toml
-      - id: check-yaml
-      - id: destroyed-symlinks
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-
+- repo: https://github.com/compilerla/conventional-pre-commit
+  rev: v2.1.1
+  hooks:
+    - id: conventional-pre-commit
+      stages: [commit-msg]
+      args: [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
+- repo: https://github.com/doublify/pre-commit-rust
+  rev: v1.0
+  hooks:
+    - id: fmt
+    - id: cargo-check
+    - id: clippy
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.3.0
+  hooks:
+    - id: check-added-large-files
+    - id: check-case-conflict
+    - id: check-json
+    - id: check-shebang-scripts-are-executable
+    - id: check-symlinks
+    - id: check-toml
+    - id: check-yaml
+    - id: destroyed-symlinks
+    - id: end-of-file-fixer
+    - id: trailing-whitespace
