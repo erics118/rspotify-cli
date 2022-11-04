@@ -2,8 +2,16 @@
 name = "rspotify-cli"
 version = "0.1.0"
 authors = ["es183923"]
+
 edition = "2021"
+rust-version = "1.65"
+
 description = "A cli to get information and control Spotify."
+repository = ""
+license = "MIT"
+keywords = ["spotify", "music"]
+categories = ["command-line-utilities"]
+publish = false
 
 [dependencies]
 clap = { version = "4.0.18", features = ["derive", "cargo", "env", "color", "wrap_help"] }

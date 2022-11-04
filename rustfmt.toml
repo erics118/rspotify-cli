@@ -1,0 +1,12 @@
+edition = "2021"
+unstable_features = true
+wrap_comments = true
+imports_granularity = "Crate"
+newline_style = "Unix"
+match_block_trailing_comma = true
+normalize_comments = true
+normalize_doc_attributes = true
+group_imports = "StdExternalCrate"
+tab_spaces = 4
+use_field_init_shorthand = true
+

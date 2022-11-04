@@ -1,17 +1,24 @@
+#![warn(
+    explicit_outlives_requirements,
+    elided_lifetimes_in_paths,
+    let_underscore_drop,
+    missing_debug_implementations,
+    noop_method_call,
+    unsafe_code,
+    unused_qualifications
+)]
+
 mod currently_playing;
 mod error;
-use crate::error::Error;
 
-use crate::currently_playing::CurrentlyPlaying;
+use std::{fs, path::PathBuf};
+
 use clap::{Parser, Subcommand};
-use rspotify::Config;
-use rspotify::{prelude::*, scopes, AuthCodeSpotify, Credentials, OAuth};
+use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config, Credentials, OAuth};
 
-use std::fs;
-use std::path::PathBuf;
+use crate::{currently_playing::CurrentlyPlaying, error::Error};
 
 #[derive(Debug, Parser, Clone)]
-#[non_exhaustive]
 #[command(
     name = clap::crate_name!(),
     author = clap::crate_authors!(),
@@ -51,7 +58,6 @@ struct Cli {
     redirect_uri: String,
 }
 
-#[non_exhaustive]
 #[derive(Debug, Subcommand, Clone)]
 enum Commands {
     /// Print the entire status in a debug format
@@ -149,6 +155,8 @@ async fn main() {
                 Commands::Like => todo!(),
                 Commands::Unlike => todo!(),
                 Commands::ToggleLikeUnlike => todo!(),
+                #[allow(unreachable_patterns)]
+                _ => todo!(),
             }
         } else {
             println!("{} - {}", curr.title, curr.artist);

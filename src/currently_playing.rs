@@ -1,6 +1,8 @@
-use crate::error::Error;
-use rspotify::{prelude::*, AuthCodeSpotify};
 use std::time::Duration;
+
+use rspotify::{prelude::*, AuthCodeSpotify};
+
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct CurrentlyPlaying {
@@ -10,33 +12,6 @@ pub struct CurrentlyPlaying {
     pub duration: Duration,
 }
 
-/*
-*
-*  async fn current_user_saved_tracks_contains(&mut self, ids: Vec<String>) {
-   match self.spotify.current_user_saved_tracks_contains(&ids).await {
-     Ok(is_saved_vec) => {
-       let mut app = self.app.lock().await;
-       for (i, id) in ids.iter().enumerate() {
-         if let Some(is_liked) = is_saved_vec.get(i) {
-           if *is_liked {
-             app.liked_song_ids_set.insert(id.to_string());
-           } else {
-             // The song is not liked, so check if it should be removed
-             if app.liked_song_ids_set.contains(id) {
-               app.liked_song_ids_set.remove(id);
-             }
-           }
-         };
-       }
-     }
-     Err(e) => {
-       self.handle_error(anyhow!(e)).await;
-     }
-   }
- }
-
-
- */
 impl CurrentlyPlaying {
     pub async fn new(spotify: AuthCodeSpotify) -> Result<Self, Error> {
         let curr = match spotify.current_user_playing_item().await {
