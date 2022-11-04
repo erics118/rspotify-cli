@@ -17,10 +17,9 @@ impl CurrentlyPlaying {
     pub async fn new(spotify: AuthCodeSpotify) -> Result<Self> {
         let curr = spotify
             .current_user_playing_item()
-            .await
-            .context(Error::NotRunning)?
-            .context(Error::NotRunning)?;
-        match curr.item.unwrap() {
+            .await?
+            .context(Error::MissingData)?;
+        match curr.item.context(Error::MissingData)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 title: t.name,
                 artist: t.artists.first().cloned().context(Error::MissingData)?.name,
