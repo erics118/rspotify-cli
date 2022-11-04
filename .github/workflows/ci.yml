@@ -4,8 +4,8 @@ on:
   pull_request:
   push:
     branches:
-      - staging
-      - trying
+      - main
+      - dev
 
 env:
   RUSTFLAGS: -Dwarnings
