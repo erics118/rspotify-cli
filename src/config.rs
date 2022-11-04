@@ -18,7 +18,7 @@ pub fn get_config_path(file: ConfigFile) -> Result<PathBuf> {
         .join(".config")
         .join("rspotify-cli");
     if !config_dir.exists() {
-        fs::create_dir_all(config_dir.clone()).context(Error::Config)?;
+        fs::create_dir_all(config_dir.clone())?;
     }
     match file {
         ConfigFile::Base => Ok(config_dir),

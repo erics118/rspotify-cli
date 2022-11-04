@@ -41,7 +41,7 @@ struct Cli {
         long,
         value_name = "CLIENT_ID",
         env = "SPOTIFY_CLIENT_ID",
-        default_value = "886370e973334cd6ba0e94201eb9357d"
+        required = true,
     )]
     client_id: String,
     #[arg(
@@ -49,7 +49,7 @@ struct Cli {
         long,
         value_name = "CLIENT_SECRET",
         env = "SPOTIFY_CLIENT_SECRET",
-        default_value = "827f6d8962244f4383c46338db6f29e5"
+        required = true,
     )]
     client_secret: String,
     #[arg(
@@ -107,13 +107,8 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
 
     let mut spotify = AuthCodeSpotify::with_config(creds, oauth, config);
 
-    let url = spotify
-        .get_authorize_url(false)
-        .context(Error::AuthorizationURI)?;
-    spotify
-        .prompt_for_token(&url)
-        .await
-        .context(Error::AuthorizationURI)?;
+    let url = spotify.get_authorize_url(false)?;
+    spotify.prompt_for_token(&url).await?;
 
     Ok(spotify)
 }
@@ -122,11 +117,10 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
 async fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let spotify = init_spotify(cli.clone()).await.context(Error::NotRunning)?;
+    let spotify = init_spotify(cli.clone()).await?;
 
     let curr = CurrentlyPlaying::new(spotify)
-        .await
-        .context(Error::NotRunning)?;
+        .await?;
 
     if let Some(command) = cli.command {
         match command {
