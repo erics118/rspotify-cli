@@ -29,7 +29,7 @@ impl CurrentlyPlaying {
             .current_playback(None, None::<Vec<_>>)
             .await?
             .context(Error::NotRunning)?;
-        match curr.item.context("qerqewrqwrqew")? {
+        match curr.item.context(Error::NotRunning)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 title: t.name,
                 artist: t.artists.first().cloned().context(Error::MissingData)?.name,
