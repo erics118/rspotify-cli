@@ -166,12 +166,14 @@ async fn main() -> Result<()> {
             Commands::Device => Ok(println!("{}", curr.device)),
             Commands::PlayingType => Ok(println!("{:?}", curr.playing_type)),
             // commands that modify the state
-            Commands::Play => todo!(),
-            Commands::Pause => todo!(),
-            Commands::TogglePlayPause => todo!(),
-            Commands::Like => todo!(),
-            Commands::Unlike => todo!(),
-            Commands::ToggleLikeUnlike => todo!(),
+            Commands::Play => Ok(println!("{}", curr.play().await.is_ok())),
+            Commands::Pause => Ok(println!("{}", curr.pause().await.is_ok())),
+            Commands::TogglePlayPause => Ok(println!("{}", curr.toggle_play_pause().await.is_ok())),
+            Commands::Like => Ok(println!("{}", curr.like().await.is_ok())),
+            Commands::Unlike => Ok(println!("{}", curr.unlike().await.is_ok())),
+            Commands::ToggleLikeUnlike => {
+                Ok(println!("{}", curr.toggle_like_unlike().await.is_ok()))
+            },
         }
     } else {
         Ok(println!("{} - {}", curr.title, curr.artist))

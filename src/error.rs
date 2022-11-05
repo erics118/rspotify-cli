@@ -14,6 +14,8 @@ pub enum Error {
     Config,
     #[error("Missing data in the track metadata. Please report this error.")]
     MissingData,
+    #[error("Unable to like or dislike song.")]
+    Like,
 }
 
 impl From<ClientError> for Error {
