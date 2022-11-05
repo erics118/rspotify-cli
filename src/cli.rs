@@ -12,29 +12,7 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
-    #[arg(
-        short = 'i',
-        long,
-        value_name = "CLIENT_ID",
-        env = "SPOTIFY_CLIENT_ID",
-        required = true
-    )]
-    pub client_id: String,
-    #[arg(
-        short = 's',
-        long,
-        value_name = "CLIENT_SECRET",
-        env = "SPOTIFY_CLIENT_SECRET",
-        required = true
-    )]
-    pub client_secret: String,
-    #[arg(
-        short = 'r',
-        long,
-        value_name = "REDIRECT_URL",
-        env = "SPOTIFY_REDIRECT_URL",
-        default_value = "http://localhost:8000/callback"
-    )]
+    #[arg(short, long, value_name = "REDIRECT_URL")]
     pub redirect_uri: String,
 }
 

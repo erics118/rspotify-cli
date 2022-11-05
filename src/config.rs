@@ -1,28 +1,54 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs::{create_dir_all, read_to_string, OpenOptions},
+    path::PathBuf,
+};
 
 use anyhow::{Context, Result};
+use dirs::home_dir;
+use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
 #[allow(dead_code)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum ConfigFile {
-    Base,
     Token,
     Config,
 }
 
-pub fn get_config_path(file: ConfigFile) -> Result<PathBuf> {
-    let home_dir = dirs::home_dir();
-    let config_dir = home_dir
+#[derive(Debug, Deserialize, Serialize, Default)]
+pub struct Config {
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_uri: String,
+}
+
+pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
+    let config_dir = home_dir()
         .context(Error::Config)?
         .join(".config")
         .join("rspotify-cli");
     if !config_dir.exists() {
-        fs::create_dir_all(config_dir.clone())?;
+        create_dir_all(config_dir.clone())?;
     }
-    match file {
-        ConfigFile::Base => Ok(config_dir),
-        ConfigFile::Token => Ok(config_dir.join("token")),
-        ConfigFile::Config => Ok(config_dir.join("config")),
+
+    let mut file = PathBuf::new();
+    file.push(config_dir);
+    file.push(match file_name {
+        ConfigFile::Token => "token",
+        ConfigFile::Config => "config.toml",
+    });
+
+    if !file.exists() {
+        OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(file.clone())?;
     }
+    Ok(file)
+}
+
+pub fn load_config() -> Result<Config> {
+    let contents = read_to_string(get_config_path(ConfigFile::Config)?)?;
+    Ok(toml::from_str::<Config>(&contents)?)
 }

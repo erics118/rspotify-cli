@@ -16,18 +16,18 @@ mod pretty_duration;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config, Credentials, OAuth};
+use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config as RSpotifyConfig, Credentials, OAuth};
 
 use crate::{
     cli::{Cli, Commands},
-    config::{get_config_path, ConfigFile},
+    config::{get_config_path, load_config, Config, ConfigFile},
     currently_playing::CurrentlyPlaying,
     error::Error,
     pretty_duration::PrettyDuration,
 };
 
-async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
-    let config = Config {
+async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
+    let rspotify_config = RSpotifyConfig {
         token_cached: true,
         cache_path: get_config_path(ConfigFile::Token).context(Error::Config)?,
         ..Default::default()
@@ -56,13 +56,13 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
             "user-read-email",
             "user-read-private"
         ),
-        redirect_uri: cli.redirect_uri,
+        redirect_uri: config.redirect_uri,
         ..Default::default()
     };
 
-    let creds = Credentials::new(&cli.client_id, &cli.client_secret);
+    let creds = Credentials::new(&config.client_id, &config.client_secret);
 
-    let mut spotify = AuthCodeSpotify::with_config(creds, oauth, config);
+    let mut spotify = AuthCodeSpotify::with_config(creds, oauth, rspotify_config);
 
     let url = spotify.get_authorize_url(false)?;
     spotify.prompt_for_token(&url).await?;
@@ -73,8 +73,9 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    let config = load_config()?;
 
-    let spotify = init_spotify(cli.clone()).await?;
+    let spotify = init_spotify(config).await?;
 
     let curr = CurrentlyPlaying::new(spotify).await?;
 
