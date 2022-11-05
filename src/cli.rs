@@ -12,8 +12,6 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
-    #[arg(short, long, value_name = "REDIRECT_URL")]
-    pub redirect_uri: String,
 }
 
 #[derive(Debug, Subcommand, Clone)]
