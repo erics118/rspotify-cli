@@ -1166,6 +1166,8 @@ dependencies = [
  "clap",
  "dirs",
  "rspotify",
+ "serde",
+ "serde_json",
  "thiserror",
  "tokio",
 ]

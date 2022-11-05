@@ -66,6 +66,8 @@ struct Cli {
 enum Commands {
     /// Print the entire status in a debug format
     Debug,
+    /// Print the entire status in json format
+    Json,
     /// Print the title of the song
     Title,
     /// Print the artist of the song
@@ -75,7 +77,15 @@ enum Commands {
     /// Print the length of the song
     Duration,
     /// Print the status of the song
-    Status,
+    IsPlaying,
+    /// Print how repeat is set
+    RepeatState,
+    /// Print if shuffle is enabled
+    ShuffleState,
+    /// Print the device name
+    Device,
+    /// Print the type of playback: track, episode, advertisement, unknown
+    PlayingType,
     /// Play the song if it was previously paused
     Play,
     /// Pause the song if it was previously playing
@@ -98,7 +108,27 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
     };
 
     let oauth = OAuth {
-        scopes: scopes!("user-read-currently-playing"),
+        scopes: scopes!(
+            "ugc-image-upload",
+            "user-read-playback-state",
+            "user-modify-playback-state",
+            "user-read-currently-playing",
+            "app-remote-control",
+            "streaming",
+            "playlist-read-private",
+            "playlist-read-collaborative",
+            "playlist-modify-private",
+            "playlist-modify-public",
+            "user-follow-modify",
+            "user-follow-read",
+            "user-read-playback-position",
+            "user-top-read",
+            "user-read-recently-played",
+            "user-library-modify",
+            "user-library-read",
+            "user-read-email",
+            "user-read-private"
+        ),
         redirect_uri: cli.redirect_uri,
         ..Default::default()
     };
@@ -125,11 +155,16 @@ async fn main() -> Result<()> {
         match command {
             // commands that fetch the state
             Commands::Debug => Ok(println!("{:#?}", curr)),
+            Commands::Json => Ok(println!("{}", serde_json::to_value(curr).unwrap())),
             Commands::Title => Ok(println!("{}", curr.title)),
             Commands::Artist => Ok(println!("{}", curr.artist)),
             Commands::Progress => Ok(println!("{}", curr.progress.pretty())),
             Commands::Duration => Ok(println!("{}", curr.duration.pretty())),
-            Commands::Status => todo!(),
+            Commands::IsPlaying => Ok(println!("{}", curr.is_playing)),
+            Commands::RepeatState => Ok(println!("{:?}", curr.repeat_state)),
+            Commands::ShuffleState => Ok(println!("{}", curr.shuffle_state)),
+            Commands::Device => Ok(println!("{}", curr.device)),
+            Commands::PlayingType => Ok(println!("{:?}", curr.playing_type)),
             // commands that modify the state
             Commands::Play => todo!(),
             Commands::Pause => todo!(),
