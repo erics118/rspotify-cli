@@ -8,97 +8,23 @@
     unused_qualifications
 )]
 
+mod cli;
 mod config;
 mod currently_playing;
 mod error;
 mod pretty_duration;
 
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::Parser;
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config, Credentials, OAuth};
 
 use crate::{
+    cli::{Cli, Commands},
     config::{get_config_path, ConfigFile},
     currently_playing::CurrentlyPlaying,
     error::Error,
     pretty_duration::PrettyDuration,
 };
-
-#[derive(Debug, Parser, Clone)]
-#[command(
-    name = clap::crate_name!(),
-    author = clap::crate_authors!(),
-    version = clap::crate_version!(),
-    propagate_version = true,
-    about = clap::crate_description!(),
-    disable_help_subcommand = true,
-)]
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Commands>,
-    #[arg(
-        short = 'i',
-        long,
-        value_name = "CLIENT_ID",
-        env = "SPOTIFY_CLIENT_ID",
-        required = true
-    )]
-    client_id: String,
-    #[arg(
-        short = 's',
-        long,
-        value_name = "CLIENT_SECRET",
-        env = "SPOTIFY_CLIENT_SECRET",
-        required = true
-    )]
-    client_secret: String,
-    #[arg(
-        short = 'r',
-        long,
-        value_name = "REDIRECT_URL",
-        env = "SPOTIFY_REDIRECT_URL",
-        default_value = "http://localhost:8000/callback"
-    )]
-    redirect_uri: String,
-}
-
-#[derive(Debug, Subcommand, Clone)]
-enum Commands {
-    /// Print the entire status in a debug format
-    Debug,
-    /// Print the entire status in json format
-    Json,
-    /// Print the title of the song
-    Title,
-    /// Print the artist of the song
-    Artist,
-    /// Print the current progress in the song
-    Progress,
-    /// Print the length of the song
-    Duration,
-    /// Print the status of the song
-    IsPlaying,
-    /// Print how repeat is set
-    RepeatState,
-    /// Print if shuffle is enabled
-    ShuffleState,
-    /// Print the device name
-    Device,
-    /// Print the type of playback: track, episode, advertisement, unknown
-    PlayingType,
-    /// Play the song if it was previously paused
-    Play,
-    /// Pause the song if it was previously playing
-    Pause,
-    /// Toggle the state of the song between playing and paused
-    TogglePlayPause,
-    /// Like the current song
-    Like,
-    /// Unlike the current song
-    Unlike,
-    /// Toggle like/unlike for the current song
-    ToggleLikeUnlike,
-}
 
 async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
     let config = Config {
@@ -108,6 +34,7 @@ async fn init_spotify(cli: Cli) -> Result<AuthCodeSpotify> {
     };
 
     let oauth = OAuth {
+        // use all scopes bc scopes are annoying
         scopes: scopes!(
             "ugc-image-upload",
             "user-read-playback-state",
