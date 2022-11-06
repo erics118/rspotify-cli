@@ -23,11 +23,16 @@ repos:
   hooks:
     - id: check-added-large-files
     - id: check-case-conflict
-    - id: check-json
     - id: check-shebang-scripts-are-executable
-    - id: check-symlinks
+    - id: check-json
+      always_run: true
+      files: '^.*\.json$'
     - id: check-toml
+      always_run: true
+      files: '^.*\.toml$'
     - id: check-yaml
+      always_run: true
+      files: '^.*\.ya?ml$'
     - id: destroyed-symlinks
     - id: end-of-file-fixer
 
