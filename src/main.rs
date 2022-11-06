@@ -93,15 +93,3 @@ async fn main() -> Result<()> {
     };
     Ok(())
 }
-// println!("{}", curr.display().await),
-// single-purpose commands
-// Statuses::Title => println!("{}", curr.title),
-//
-// Statuses::Artist => println!("{}", curr.artist),
-// Statuses::Progress => println!("{}", curr.progress.pretty()),
-// Statuses::Duration => println!("{}", curr.duration.pretty()),
-// Statuses::IsPlaying => println!("{}", curr.is_playing),
-// Statuses::RepeatState => println!("{:?}", curr.repeat_state),
-// Statuses::ShuffleState => println!("{}", curr.shuffle_state),
-// Statuses::Device => println!("{}", curr.device),
-// Statuses::PlayingType => println!("{:?}", curr.playing_type),

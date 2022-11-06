@@ -125,29 +125,7 @@ impl CurrentlyPlaying {
             format!("{:#?}", self.shuffle_state),
         );
         vars.insert("device".to_string(), self.device.to_string());
+        // todo: add is_liked
         strfmt(&format, &vars).unwrap()
-        // self.title,
-        // self.artist,
-        // if self.is_liked().await.unwrap() {
-        // "♥"
-        // } else {
-        // "♡"
-        // }
-        // )
-        // format!("{} - {} ({}/{}) {}", self.title, self.artist,
-        // self.progress.pretty(), self.duration.pretty(),
-        // self.is_liked().await.unwrap())
-        // rt_format(format,
-        // id = self.id,
-        // title = self.title,
-        // artist = self.artist,
-        // progress = self.progress,
-        // duration = self.duration,
-        // is_playing = self.is_playing,
-        // repeat_state = self.repeat_state,
-        // shuffle_state = self.shuffle_state,
-        // device = self.device,
-        // playing_type = self.playing_type,
-        // )
     }
 }

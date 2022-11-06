@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::Error;
 
 #[allow(dead_code)]
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ConfigFile {
     Token,
     Config,
