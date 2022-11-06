@@ -1,4 +1,4 @@
-use std::{str::FromStr, time::Duration};
+use std::{collections::HashMap, str::FromStr, time::Duration};
 
 use anyhow::{Context, Result};
 use rspotify::{
@@ -7,8 +7,9 @@ use rspotify::{
     AuthCodeSpotify,
 };
 use serde::{Deserialize, Serialize};
+use strfmt::strfmt;
 
-use crate::error::Error;
+use crate::{error::Error, pretty_duration::PrettyDuration};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CurrentlyPlaying {
@@ -31,10 +32,10 @@ impl CurrentlyPlaying {
         let curr = spotify
             .current_playback(None, None::<Vec<_>>)
             .await?
-            .context(Error::NotRunning)?;
+            .context(Error::NotConnected)?;
 
         // todo: lots of these won't work with local content
-        match curr.item.context(Error::NotRunning)? {
+        match curr.item.context(Error::NotConnected)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 spotify,
                 id: t.id.context(Error::MissingData)?.to_string(),
@@ -83,18 +84,21 @@ impl CurrentlyPlaying {
             .first()
             .unwrap())
     }
+
     pub async fn like(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_add(&[TrackId::from_str(&self.id).unwrap()])
             .await?;
         Ok(())
     }
+
     pub async fn unlike(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_delete(&[TrackId::from_str(&self.id).unwrap()])
             .await?;
         Ok(())
     }
+
     pub async fn toggle_like_unlike(&self) -> Result<()> {
         // todo: may need separate checking for tracks and episodes
         if self.is_liked().await? {
@@ -102,5 +106,48 @@ impl CurrentlyPlaying {
         } else {
             Ok(self.like().await?)
         }
+    }
+
+    pub async fn display(&self, format: String) -> String {
+        let mut vars = HashMap::new();
+        vars.insert("id".to_string(), self.id.to_string());
+        vars.insert("title".to_string(), self.title.to_string());
+        vars.insert("artist".to_string(), self.artist.to_string());
+        vars.insert("progress".to_string(), self.progress.pretty());
+        vars.insert("duration".to_string(), self.duration.pretty());
+        vars.insert("is_playing".to_string(), self.is_playing.to_string());
+        vars.insert(
+            "repeat_state".to_string(),
+            format!("{:#?}", self.repeat_state),
+        );
+        vars.insert(
+            "shuffle_state".to_string(),
+            format!("{:#?}", self.shuffle_state),
+        );
+        vars.insert("device".to_string(), self.device.to_string());
+        strfmt(&format, &vars).unwrap()
+        // self.title,
+        // self.artist,
+        // if self.is_liked().await.unwrap() {
+        // "♥"
+        // } else {
+        // "♡"
+        // }
+        // )
+        // format!("{} - {} ({}/{}) {}", self.title, self.artist,
+        // self.progress.pretty(), self.duration.pretty(),
+        // self.is_liked().await.unwrap())
+        // rt_format(format,
+        // id = self.id,
+        // title = self.title,
+        // artist = self.artist,
+        // progress = self.progress,
+        // duration = self.duration,
+        // is_playing = self.is_playing,
+        // repeat_state = self.repeat_state,
+        // shuffle_state = self.shuffle_state,
+        // device = self.device,
+        // playing_type = self.playing_type,
+        // )
     }
 }

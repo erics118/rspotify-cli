@@ -5,13 +5,13 @@ use clap::{Parser, Subcommand};
     name = clap::crate_name!(),
     author = clap::crate_authors!(),
     version = clap::crate_version!(),
-    propagate_version = true,
+    // propagate_version = true,
     about = clap::crate_description!(),
     disable_help_subcommand = true,
 )]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 }
 
 #[derive(Debug, Subcommand, Clone)]
@@ -20,24 +20,11 @@ pub enum Commands {
     Debug,
     /// Print the entire status in json format
     Json,
-    /// Print the title of the song
-    Title,
-    /// Print the artist of the song
-    Artist,
-    /// Print the current progress in the song
-    Progress,
-    /// Print the length of the song
-    Duration,
-    /// Print the status of the song
-    IsPlaying,
-    /// Print how repeat is set
-    RepeatState,
-    /// Print if shuffle is enabled
-    ShuffleState,
-    /// Print the device name
-    Device,
-    /// Print the type of playback: track, episode, advertisement, unknown
-    PlayingType,
+    /// Print the current status, optionally with a custom format
+    Status {
+        #[arg(short, long, default_value = "{title} - {artist}")]
+        format: String,
+    },
     /// Play the song if it was previously paused
     Play,
     /// Pause the song if it was previously playing

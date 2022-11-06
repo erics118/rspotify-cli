@@ -50,5 +50,5 @@ pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
 
 pub fn load_config() -> Result<Config> {
     let contents = read_to_string(get_config_path(ConfigFile::Config)?)?;
-    Ok(toml::from_str::<Config>(&contents)?)
+    toml::from_str::<Config>(&contents).context(Error::IncompleteConfig)
 }

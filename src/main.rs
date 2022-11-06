@@ -23,7 +23,6 @@ use crate::{
     config::{get_config_path, load_config, Config, ConfigFile},
     currently_playing::CurrentlyPlaying,
     error::Error,
-    pretty_duration::PrettyDuration,
 };
 
 async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
@@ -79,31 +78,30 @@ async fn main() -> Result<()> {
 
     let curr = CurrentlyPlaying::new(spotify).await?;
 
-    if let Some(command) = cli.command {
-        match command {
-            // commands that fetch the state
-            Commands::Debug => Ok(println!("{:#?}", curr)),
-            Commands::Json => Ok(println!("{}", serde_json::to_value(curr).unwrap())),
-            Commands::Title => Ok(println!("{}", curr.title)),
-            Commands::Artist => Ok(println!("{}", curr.artist)),
-            Commands::Progress => Ok(println!("{}", curr.progress.pretty())),
-            Commands::Duration => Ok(println!("{}", curr.duration.pretty())),
-            Commands::IsPlaying => Ok(println!("{}", curr.is_playing)),
-            Commands::RepeatState => Ok(println!("{:?}", curr.repeat_state)),
-            Commands::ShuffleState => Ok(println!("{}", curr.shuffle_state)),
-            Commands::Device => Ok(println!("{}", curr.device)),
-            Commands::PlayingType => Ok(println!("{:?}", curr.playing_type)),
-            // commands that modify the state
-            Commands::Play => Ok(println!("{}", curr.play().await.is_ok())),
-            Commands::Pause => Ok(println!("{}", curr.pause().await.is_ok())),
-            Commands::TogglePlayPause => Ok(println!("{}", curr.toggle_play_pause().await.is_ok())),
-            Commands::Like => Ok(println!("{}", curr.like().await.is_ok())),
-            Commands::Unlike => Ok(println!("{}", curr.unlike().await.is_ok())),
-            Commands::ToggleLikeUnlike => {
-                Ok(println!("{}", curr.toggle_like_unlike().await.is_ok()))
-            },
-        }
-    } else {
-        Ok(println!("{} - {}", curr.title, curr.artist))
-    }
+    match cli.command {
+        // commands that fetch the state
+        Commands::Debug => println!("{:#?}", curr),
+        Commands::Json => println!("{}", serde_json::to_value(curr).unwrap()),
+        Commands::Status { format } => println!("{}", curr.display(format).await),
+        // commands that modify the state
+        Commands::Play => println!("{}", curr.play().await.is_ok()),
+        Commands::Pause => println!("{}", curr.pause().await.is_ok()),
+        Commands::TogglePlayPause => println!("{}", curr.toggle_play_pause().await.is_ok()),
+        Commands::Like => println!("{}", curr.like().await.is_ok()),
+        Commands::Unlike => println!("{}", curr.unlike().await.is_ok()),
+        Commands::ToggleLikeUnlike => println!("{}", curr.toggle_like_unlike().await.is_ok()),
+    };
+    Ok(())
 }
+// println!("{}", curr.display().await),
+// single-purpose commands
+// Statuses::Title => println!("{}", curr.title),
+//
+// Statuses::Artist => println!("{}", curr.artist),
+// Statuses::Progress => println!("{}", curr.progress.pretty()),
+// Statuses::Duration => println!("{}", curr.duration.pretty()),
+// Statuses::IsPlaying => println!("{}", curr.is_playing),
+// Statuses::RepeatState => println!("{:?}", curr.repeat_state),
+// Statuses::ShuffleState => println!("{}", curr.shuffle_state),
+// Statuses::Device => println!("{}", curr.device),
+// Statuses::PlayingType => println!("{:?}", curr.playing_type),
