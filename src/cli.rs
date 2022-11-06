@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{ArgGroup, Parser, Subcommand};
 
 #[derive(Debug, Parser, Clone)]
 #[command(
@@ -16,14 +16,18 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
-    /// Print the entire status in a debug format
-    Debug,
-    /// Print the entire status in json format
-    Json,
     /// Print the current status, optionally with a custom format
+    #[clap(group = ArgGroup::new("formats").multiple(false))]
     Status {
         #[arg(short, long, default_value = "{title} - {artist}")]
+        /// Print the status in an custom format
         format: String,
+        #[arg(short, long)]
+        /// Print the status in json to be used for external parsing
+        json: bool,
+        #[arg(short, long)]
+        /// Print the status in the rust debug format
+        debug: bool,
     },
     /// Play the song if it was previously paused
     Play,
