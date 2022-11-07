@@ -87,9 +87,9 @@ async fn main() -> Result<()> {
             if debug {
                 println!("{curr:#?}");
             } else if json {
-                println!("{}", serde_json::to_value(curr).unwrap())
+                println!("{}", serde_json::to_value(curr)?);
             } else {
-                println!("{}", curr.display(format).await)
+                println!("{}", curr.display(format).await);
             }
         },
         Commands::Play => println!("{}", curr.play().await.is_ok()),

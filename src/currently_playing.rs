@@ -66,35 +66,52 @@ impl CurrentlyPlaying {
     }
 
     pub async fn play(&self) -> Result<()> {
-        todo!()
+        self.spotify
+            .resume_playback(None, None)
+            .await
+            .context(Error::Playback)
     }
+
     pub async fn pause(&self) -> Result<()> {
-        todo!()
+        self.spotify
+            .pause_playback(None)
+            .await
+            .context(Error::Playback)
     }
+
     pub async fn toggle_play_pause(&self) -> Result<()> {
-        todo!()
+        if self.is_playing {
+            self.spotify
+                .pause_playback(None)
+                .await
+                .context(Error::Playback)
+        } else {
+            self.spotify
+                .resume_playback(None, None)
+                .await
+                .context(Error::Playback)
+        }
     }
 
     pub async fn is_liked(&self) -> Result<bool> {
-        // todo: remove all unwraps
         Ok(*self
             .spotify
-            .current_user_saved_tracks_contains(&[TrackId::from_str(&self.id).unwrap()])
+            .current_user_saved_tracks_contains(&[TrackId::from_str(&self.id)?])
             .await?
             .first()
-            .unwrap())
+            .unwrap_or(&false))
     }
 
     pub async fn like(&self) -> Result<()> {
         self.spotify
-            .current_user_saved_tracks_add(&[TrackId::from_str(&self.id).unwrap()])
+            .current_user_saved_tracks_add(&[TrackId::from_str(&self.id)?])
             .await?;
         Ok(())
     }
 
     pub async fn unlike(&self) -> Result<()> {
         self.spotify
-            .current_user_saved_tracks_delete(&[TrackId::from_str(&self.id).unwrap()])
+            .current_user_saved_tracks_delete(&[TrackId::from_str(&self.id)?])
             .await?;
         Ok(())
     }
