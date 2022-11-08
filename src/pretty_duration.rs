@@ -10,9 +10,9 @@ impl PrettyDuration for Duration {
         let minutes = (self.as_secs() / 60) % 60;
         let seconds = self.as_secs() % 60;
         if hours > 0 {
-            format!("{hours}:{minutes}:{seconds}")
+            format!("{hours}:{minutes:0>2}:{seconds:0>2}")
         } else {
-            format!("{minutes}:{seconds}")
+            format!("{minutes}:{seconds:0>2}")
         }
     }
 }
