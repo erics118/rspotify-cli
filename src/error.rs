@@ -14,7 +14,7 @@ pub enum Error {
     Config,
     #[error("Missing data in the track metadata. Please report this error.")]
     MissingData,
-    #[error("One or more config field is missing. The config file is located at {0}. It was created if it did not already exist")]
+    #[error("One or more config field is missing. The config file is located at {0}. It was created if it did not already exist.")]
     IncompleteConfig(String),
     #[error("Unable to like or unlike the song.")]
     Like,
