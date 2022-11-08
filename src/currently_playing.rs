@@ -142,7 +142,14 @@ impl CurrentlyPlaying {
             format!("{:#?}", self.shuffle_state),
         );
         vars.insert("device".to_string(), self.device.to_string());
-        // todo: add is_liked
+        vars.insert(
+            "is_liked".to_string(),
+            if self.is_liked().await.unwrap_or_default() {
+                "♥".to_string()
+            } else {
+                "♡".to_string()
+            },
+        );
         strfmt(&format, &vars).unwrap()
     }
 }

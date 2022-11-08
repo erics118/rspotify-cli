@@ -23,7 +23,8 @@ jobs:
           default: true
           components: clippy
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
 
       - uses: actions-rs/clippy-check@v1
         with:
@@ -65,10 +66,12 @@ jobs:
           default: true
           components: rustfmt
 
-      - uses: Swatinem/rust-cache@v2
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
 
       - name: Run cargo fmt
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
+

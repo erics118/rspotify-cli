@@ -75,7 +75,8 @@ async fn main() -> Result<()> {
     let config = load_config()?;
 
     let spotify = init_spotify(config).await?;
-
+    // println!("{:#?}", spotify.clone().current_playing(None,
+    // None::<&[_]>).await.unwrap());
     let curr = CurrentlyPlaying::new(spotify).await?;
 
     match cli.command {
