@@ -4,19 +4,19 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use dirs::home_dir;
+use dirs::config_dir;
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
 #[allow(dead_code)]
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ConfigFile {
     Token,
     Config,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub client_id: String,
     pub client_secret: String,
@@ -24,21 +24,19 @@ pub struct Config {
 }
 
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
-    let config_dir = home_dir()
-        .context(Error::Config)?
-        .join(".config")
-        .join("rspotify-cli");
+    let config_dir = config_dir().context(Error::Config)?;
 
     if !config_dir.exists() {
         create_dir_all(config_dir.clone())?;
     }
 
-    let mut config_file = PathBuf::new();
-    config_file.push(config_dir);
-    config_file.push(match file_name {
-        ConfigFile::Token => "token.json",
-        ConfigFile::Config => "config.toml",
-    });
+    let config_file = PathBuf::new()
+        .join(config_dir)
+        .join("rspotify-cli")
+        .join(match file_name {
+            ConfigFile::Token => "token.json",
+            ConfigFile::Config => "config.toml",
+        });
 
     if !config_file.exists() {
         OpenOptions::new()
