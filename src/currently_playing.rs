@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr, time::Duration};
+use std::{str::FromStr, time::Duration};
 
 use anyhow::{Context, Result};
 use rspotify::{
@@ -7,13 +7,12 @@ use rspotify::{
     AuthCodeSpotify,
 };
 use serde::{Deserialize, Serialize};
-use strfmt::strfmt;
 
-use crate::{error::Error, pretty_duration::PrettyDuration};
+use crate::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CurrentlyPlaying {
-    #[serde(skip_serializing, skip_deserializing)]
+    #[serde(skip)]
     spotify: AuthCodeSpotify,
     pub id: String,
     pub title: String,
@@ -125,31 +124,16 @@ impl CurrentlyPlaying {
         }
     }
 
-    pub async fn display(&self, format: String) -> String {
-        let mut vars = HashMap::new();
-        vars.insert("id".to_string(), self.id.to_string());
-        vars.insert("title".to_string(), self.title.to_string());
-        vars.insert("artist".to_string(), self.artist.to_string());
-        vars.insert("progress".to_string(), self.progress.pretty());
-        vars.insert("duration".to_string(), self.duration.pretty());
-        vars.insert("is_playing".to_string(), self.is_playing.to_string());
-        vars.insert(
-            "repeat_state".to_string(),
-            format!("{:#?}", self.repeat_state),
-        );
-        vars.insert(
-            "shuffle_state".to_string(),
-            format!("{:#?}", self.shuffle_state),
-        );
-        vars.insert("device".to_string(), self.device.to_string());
-        vars.insert(
-            "is_liked".to_string(),
+    pub async fn display(&self) -> String {
+        format!(
+            "{} - {} {}",
+            self.title,
+            self.artist,
             if self.is_liked().await.unwrap_or_default() {
                 "♥".to_string()
             } else {
                 "♡".to_string()
             },
-        );
-        strfmt(&format, &vars).unwrap()
+        )
     }
 }

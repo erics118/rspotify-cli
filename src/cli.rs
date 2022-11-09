@@ -5,7 +5,6 @@ use clap::{ArgGroup, Parser, Subcommand};
     name = clap::crate_name!(),
     author = clap::crate_authors!(),
     version = clap::crate_version!(),
-    // propagate_version = true,
     about = clap::crate_description!(),
     disable_help_subcommand = true,
 )]
@@ -19,14 +18,11 @@ pub enum Commands {
     /// Print the current status, optionally with a custom format
     #[clap(group = ArgGroup::new("formats").multiple(false))]
     Status {
-        #[arg(short, long, default_value = "{title} - {artist}")]
-        /// Print the status in an custom format
-        format: String,
-        #[arg(short, long)]
         /// Print the status in json to be used for external parsing
-        json: bool,
         #[arg(short, long)]
+        json: bool,
         /// Print the status in the rust debug format
+        #[arg(short, long)]
         debug: bool,
     },
     /// Play the song if it was previously paused

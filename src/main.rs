@@ -80,17 +80,13 @@ async fn main() -> Result<()> {
     let curr = CurrentlyPlaying::new(spotify).await?;
 
     match cli.command {
-        Commands::Status {
-            format,
-            debug,
-            json,
-        } => {
+        Commands::Status { debug, json } => {
             if debug {
                 println!("{curr:#?}");
             } else if json {
                 println!("{}", serde_json::to_value(curr)?);
             } else {
-                println!("{}", curr.display(format).await);
+                println!("{}", curr.display().await);
             }
         },
         Commands::Play => println!("{}", curr.play().await.is_ok()),

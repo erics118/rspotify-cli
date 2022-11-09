@@ -10,16 +10,16 @@ pub enum Error {
     AuthorizationURI,
     #[error("Spotify client is not connected. You may need to start the Spotify app or start playing music again.")]
     NotConnected,
-    #[error("Can't open or create config dir.")]
+    #[error("Can't open or create config file. Please report this error.")]
     Config,
     #[error("Missing data in the track metadata. Please report this error.")]
     MissingData,
-    #[error("One or more config field is missing. The config file is located at {0}. It was created if it did not already exist.")]
-    IncompleteConfig(String),
     #[error("Unable to like or unlike the song.")]
     Like,
     #[error("Unable to controll song playback.")]
     Playback,
+    #[error("One or more config field is missing. The config file is located at `{0}`. It was created if it did not exist.")]
+    IncompleteConfig(String),
 }
 
 impl From<ClientError> for Error {
