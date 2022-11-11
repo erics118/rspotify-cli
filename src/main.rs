@@ -13,6 +13,7 @@ mod config;
 mod currently_playing;
 mod error;
 mod pretty_duration;
+mod repeat_state;
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -63,8 +64,10 @@ async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
 
     let mut spotify = AuthCodeSpotify::with_config(creds, oauth, rspotify_config);
 
-    let url = spotify.get_authorize_url(false)?;
-    spotify.prompt_for_token(&url).await?;
+    let url = spotify
+        .get_authorize_url(false)
+        .context(Error::AuthorizationURI)?;
+    spotify.prompt_for_token(&url).await.context(Error::Auth)?;
 
     Ok(spotify)
 }
@@ -89,7 +92,7 @@ async fn main() -> Result<()> {
             } else if json {
                 println!("{}", serde_json::to_value(curr)?);
             } else {
-                println!("{}", curr.display().await);
+                println!("{}", curr.display().await?);
             }
         },
         Commands::Play => println!("{}", curr.play().await.is_ok()),
@@ -100,9 +103,9 @@ async fn main() -> Result<()> {
         Commands::ToggleLikeUnlike => println!("{}", curr.toggle_like_unlike().await.is_ok()),
         Commands::Previous => println!("{}", curr.previous().await.is_ok()),
         Commands::Next => println!("{}", curr.next().await.is_ok()),
-        Commands::Repeat { repeat: _ } => todo!(),
-        Commands::Volume { volume: _ } => todo!(),
-        Commands::Shuffle { shuffle: _ } => todo!(),
+        Commands::Repeat { repeat } => println!("{}", curr.repeat(repeat).await.is_ok()),
+        Commands::Volume { volume } => println!("{}", curr.volume(volume).await.is_ok()),
+        Commands::Shuffle { shuffle } => println!("{}", curr.shuffle(shuffle).await.is_ok()),
     };
     Ok(())
 }

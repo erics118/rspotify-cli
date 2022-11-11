@@ -2,13 +2,13 @@ use std::{str::FromStr, time::Duration};
 
 use anyhow::{Context, Result};
 use rspotify::{
-    model::{CurrentlyPlayingType, RepeatState, TrackId},
+    model::{CurrentlyPlayingType, TrackId},
     prelude::*,
     AuthCodeSpotify,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::error::Error;
+use crate::{error::Error, repeat_state::RepeatState};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CurrentlyPlaying {
@@ -37,13 +37,13 @@ impl CurrentlyPlaying {
         match curr.item.context(Error::NotConnected)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 spotify,
-                id: t.id.context(Error::MissingData)?.to_string(),
+                id: t.id.context(Error::MissingData("song id"))?.to_string(),
                 title: t.name,
-                artist: t.artists.first().cloned().context(Error::MissingData)?.name,
-                progress: curr.progress.context(Error::MissingData)?,
+                artist: t.artists.first().cloned().context("song artist")?.name,
+                progress: curr.progress.context(Error::MissingData("song progress"))?,
                 duration: t.duration,
                 is_playing: curr.is_playing,
-                repeat_state: curr.repeat_state,
+                repeat_state: curr.repeat_state.into(),
                 shuffle_state: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
@@ -53,10 +53,10 @@ impl CurrentlyPlaying {
                 id: t.id.to_string(),
                 title: t.name,
                 artist: t.show.name,
-                progress: curr.progress.context(Error::MissingData)?,
+                progress: curr.progress.context(Error::MissingData("song progress"))?,
                 duration: t.duration,
                 is_playing: curr.is_playing,
-                repeat_state: curr.repeat_state,
+                repeat_state: curr.repeat_state.into(),
                 shuffle_state: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
@@ -68,27 +68,21 @@ impl CurrentlyPlaying {
         self.spotify
             .resume_playback(None, None)
             .await
-            .context(Error::Playback)
+            .context(Error::Control("play song"))
     }
 
     pub async fn pause(&self) -> Result<()> {
         self.spotify
             .pause_playback(None)
             .await
-            .context(Error::Playback)
+            .context(Error::Control("pause song"))
     }
 
     pub async fn toggle_play_pause(&self) -> Result<()> {
         if self.is_playing {
-            self.spotify
-                .pause_playback(None)
-                .await
-                .context(Error::Playback)
+            self.pause().await
         } else {
-            self.spotify
-                .resume_playback(None, None)
-                .await
-                .context(Error::Playback)
+            self.play().await
         }
     }
 
@@ -98,29 +92,28 @@ impl CurrentlyPlaying {
             .current_user_saved_tracks_contains(&[TrackId::from_str(&self.id)?])
             .await?
             .first()
-            .unwrap_or(&false))
+            .context(Error::Control("fetch like status"))?)
     }
 
     pub async fn like(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_add(&[TrackId::from_str(&self.id)?])
-            .await?;
-        Ok(())
+            .await
+            .context(Error::Control("like song"))
     }
 
     pub async fn unlike(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_delete(&[TrackId::from_str(&self.id)?])
-            .await?;
-        Ok(())
+            .await
+            .context(Error::Control("unlike song"))
     }
 
     pub async fn toggle_like_unlike(&self) -> Result<()> {
-        // todo: may need separate checking for tracks and episodes
         if self.is_liked().await? {
-            Ok(self.unlike().await?)
+            self.unlike().await
         } else {
-            Ok(self.like().await?)
+            self.like().await
         }
     }
 
@@ -128,23 +121,57 @@ impl CurrentlyPlaying {
         self.spotify
             .previous_track(None)
             .await
-            .context(Error::Playback)
+            .context(Error::Control("go to previous song"))
     }
 
     pub async fn next(&self) -> Result<()> {
-        self.spotify.next_track(None).await.context(Error::Playback)
+        self.spotify
+            .next_track(None)
+            .await
+            .context(Error::Control("go to next song"))
     }
 
-    pub async fn display(&self) -> String {
-        format!(
+    pub async fn repeat(&self, repeat_state: Option<RepeatState>) -> Result<()> {
+        if let Some(r) = repeat_state {
+            self.spotify
+                .repeat(&r.into(), None)
+                .await
+                .context(Error::Control("set repeat state"))
+        } else {
+            self.spotify
+                .repeat(&self.repeat_state.cycle().into(), None)
+                .await
+                .context(Error::Control("set repeat state"))
+        }
+    }
+
+    pub async fn volume(&self, volume: u8) -> Result<()> {
+        if volume <= 100 {
+            self.spotify
+                .volume(volume, None)
+                .await
+                .context(Error::Control("set volume"))
+        } else {
+            anyhow::bail!(Error::Control("attempted to set volume out of range"))
+        }
+    }
+
+    pub async fn shuffle(&self, state: bool) -> Result<()> {
+        self.spotify
+            .shuffle(state, None)
+            .await
+            .context(Error::Control("set shuffle state"))
+    }
+    pub async fn display(&self) -> Result<String> {
+        Ok(format!(
             "{} - {} {}",
             self.title,
             self.artist,
-            if self.is_liked().await.unwrap_or_default() {
+            if self.is_liked().await? {
                 "♥".to_string()
             } else {
                 "♡".to_string()
             },
-        )
+        ))
     }
 }
