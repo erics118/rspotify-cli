@@ -124,6 +124,17 @@ impl CurrentlyPlaying {
         }
     }
 
+    pub async fn previous(&self) -> Result<()> {
+        self.spotify
+            .previous_track(None)
+            .await
+            .context(Error::Playback)
+    }
+
+    pub async fn next(&self) -> Result<()> {
+        self.spotify.next_track(None).await.context(Error::Playback)
+    }
+
     pub async fn display(&self) -> String {
         format!(
             "{} - {} {}",

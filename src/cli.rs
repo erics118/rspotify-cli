@@ -1,5 +1,8 @@
+use anyhow::Result;
 use clap::{ArgGroup, Parser, Subcommand};
+use rspotify::model::RepeatState;
 
+use crate::error::Error;
 #[derive(Debug, Parser, Clone)]
 #[command(
     name = clap::crate_name!(),
@@ -37,4 +40,34 @@ pub enum Commands {
     Unlike,
     /// Toggle like/unlike for the current song
     ToggleLikeUnlike,
+    /// Go to the previous song
+    Previous,
+    /// Go to the next song
+    Next,
+    /// Set the repeat state
+    Repeat {
+        /// New repeat state
+        #[arg(short, long, value_parser = parse_repeat_state)]
+        repeat: RepeatState,
+    },
+    /// Set the volume
+    Volume {
+        /// New volume level
+        #[arg(short, long)]
+        volume: u8,
+    },
+    /// Set the suffle state
+    Shuffle {
+        /// New shuffle state
+        shuffle: bool,
+    },
+}
+
+pub fn parse_repeat_state(arg: &str) -> Result<RepeatState> {
+    match arg.to_lowercase().as_str().trim() {
+        "o" | "off" => Ok(RepeatState::Off),
+        "t" | "track" => Ok(RepeatState::Track),
+        "c" | "context" => Ok(RepeatState::Context),
+        _ => Err(Error::InvalidRepeatState.into()),
+    }
 }

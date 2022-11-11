@@ -8,7 +8,9 @@ pub enum Error {
     Auth,
     #[error("Unable to create authorization URI.")]
     AuthorizationURI,
-    #[error("Spotify client is not connected. You may need to start the Spotify app or start playing music again.")]
+    #[error(
+        "Spotify client is not connected. You may need to start the Spotify app or start playing music again."
+    )]
     NotConnected,
     #[error("Can't open or create config file. Please report this error.")]
     Config,
@@ -18,8 +20,12 @@ pub enum Error {
     Like,
     #[error("Unable to controll song playback.")]
     Playback,
-    #[error("One or more config field is missing. The config file is located at `{0}`. It was created if it did not exist.")]
+    #[error(
+        "One or more config field is missing. The config file is located at `{0}`. It was created if it didn't exist."
+    )]
     IncompleteConfig(String),
+    #[error("An invalid value for the repeat state was provided.")]
+    InvalidRepeatState,
 }
 
 impl From<ClientError> for Error {

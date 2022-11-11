@@ -75,10 +75,13 @@ async fn main() -> Result<()> {
     let config = load_config()?;
 
     let spotify = init_spotify(config).await?;
-    // println!("{:#?}", spotify.clone().current_playing(None,
-    // None::<&[_]>).await.unwrap());
-    let curr = CurrentlyPlaying::new(spotify).await?;
-
+    let curr = match CurrentlyPlaying::new(spotify).await {
+        Ok(e) => e,
+        Err(_) => {
+            println!("No music playing");
+            panic!("fdsa");
+        },
+    };
     match cli.command {
         Commands::Status { debug, json } => {
             if debug {
@@ -95,6 +98,11 @@ async fn main() -> Result<()> {
         Commands::Like => println!("{}", curr.like().await.is_ok()),
         Commands::Unlike => println!("{}", curr.unlike().await.is_ok()),
         Commands::ToggleLikeUnlike => println!("{}", curr.toggle_like_unlike().await.is_ok()),
+        Commands::Previous => println!("{}", curr.previous().await.is_ok()),
+        Commands::Next => println!("{}", curr.next().await.is_ok()),
+        Commands::Repeat { repeat: _ } => todo!(),
+        Commands::Volume { volume: _ } => todo!(),
+        Commands::Shuffle { shuffle: _ } => todo!(),
     };
     Ok(())
 }
