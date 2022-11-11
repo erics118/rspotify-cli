@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use dirs::config_dir;
+use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
@@ -24,7 +24,7 @@ pub struct Config {
 }
 
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
-    let config_dir = config_dir().context(Error::Config)?;
+    let config_dir = home_dir().context(Error::Config)?.join(".config");
 
     if !config_dir.exists() {
         create_dir_all(config_dir.clone())?;
