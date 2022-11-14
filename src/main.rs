@@ -72,6 +72,19 @@ async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
     Ok(spotify)
 }
 
+pub trait ResultOkPrintErrExt<T> {
+    fn ok_or_print_err(self);
+}
+
+impl<T> ResultOkPrintErrExt<T> for Result<T> {
+    fn ok_or_print_err(self) {
+        match self {
+            Ok(_) => (),
+            Err(e) => eprintln!("{}", e),
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -82,7 +95,7 @@ async fn main() -> Result<()> {
         Ok(e) => e,
         Err(_) => {
             println!("No music playing");
-            panic!("fdsa");
+            anyhow::bail!("No music playing");
         },
     };
     match cli.command {
@@ -95,17 +108,17 @@ async fn main() -> Result<()> {
                 println!("{}", curr.display().await?);
             }
         },
-        Commands::Play => println!("{}", curr.play().await.is_ok()),
-        Commands::Pause => println!("{}", curr.pause().await.is_ok()),
-        Commands::TogglePlayPause => println!("{}", curr.toggle_play_pause().await.is_ok()),
-        Commands::Like => println!("{}", curr.like().await.is_ok()),
-        Commands::Unlike => println!("{}", curr.unlike().await.is_ok()),
-        Commands::ToggleLikeUnlike => println!("{}", curr.toggle_like_unlike().await.is_ok()),
-        Commands::Previous => println!("{}", curr.previous().await.is_ok()),
-        Commands::Next => println!("{}", curr.next().await.is_ok()),
-        Commands::Repeat { repeat } => println!("{}", curr.repeat(repeat).await.is_ok()),
-        Commands::Volume { volume } => println!("{}", curr.volume(volume).await.is_ok()),
-        Commands::Shuffle { shuffle } => println!("{}", curr.shuffle(shuffle).await.is_ok()),
+        Commands::Play => curr.play().await.ok_or_print_err(),
+        Commands::Pause => curr.pause().await.ok_or_print_err(),
+        Commands::TogglePlayPause => curr.toggle_play_pause().await.ok_or_print_err(),
+        Commands::Like => curr.like().await.ok_or_print_err(),
+        Commands::Unlike => curr.unlike().await.ok_or_print_err(),
+        Commands::ToggleLikeUnlike => curr.toggle_like_unlike().await.ok_or_print_err(),
+        Commands::Previous => curr.previous().await.ok_or_print_err(),
+        Commands::Next => curr.next().await.ok_or_print_err(),
+        Commands::Repeat { repeat } => curr.repeat(repeat).await.ok_or_print_err(),
+        Commands::Volume { volume } => curr.volume(volume).await.ok_or_print_err(),
+        Commands::Shuffle { shuffle } => curr.shuffle(shuffle).await.ok_or_print_err(),
     };
     Ok(())
 }

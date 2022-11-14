@@ -17,7 +17,7 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
-    /// Print the current status, optionally with a custom format
+    /// Print the current status
     #[clap(group = ArgGroup::new("formats").multiple(false))]
     Status {
         /// Print the status in json to be used for external parsing
@@ -53,7 +53,7 @@ pub enum Commands {
         /// New volume level
         volume: u8,
     },
-    /// Set the suffle state
+    /// Set the shuffle state
     Shuffle {
         /// New shuffle state
         shuffle: bool,
