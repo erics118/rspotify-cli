@@ -91,12 +91,9 @@ async fn main() -> Result<()> {
     let config = load_config()?;
 
     let spotify = init_spotify(config).await?;
-    let curr = match CurrentlyPlaying::new(spotify).await {
-        Ok(e) => e,
-        Err(_) => {
-            println!("No music playing");
-            anyhow::bail!("No music playing");
-        },
+    let Ok(curr) = CurrentlyPlaying::new(spotify).await else {
+        println!("No music playing");
+        anyhow::bail!("No music playing");
     };
     match cli.command {
         Commands::Status { debug, json } => {
