@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
             if debug {
                 println!("{curr:#?}");
             } else if json {
-                println!("{}", serde_json::to_value(curr)?);
+                println!("{}", curr.to_json().await?);
             } else {
                 println!("{}", curr.display().await?);
             }
