@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config as RSpotifyConfig, Credentials, OAuth};
 
 use crate::{

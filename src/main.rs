@@ -13,21 +13,21 @@ mod cli;
 mod config;
 mod currently_playing;
 mod error;
+mod init_spotify;
+mod ok_or_print_err;
 mod pretty_duration;
 mod repeat_state;
-mod ok_or_print_err;
-mod init_spotify;
 
-use anyhow::{Result};
+use anyhow::Result;
 use clap::Parser;
 
 use crate::{
     cli::{Cli, Commands},
-    config::{load_config},
+    config::load_config,
     currently_playing::CurrentlyPlaying,
-    pretty_duration::PrettyDuration,
-    ok_or_print_err::ResultOkPrintErr,
     init_spotify::init_spotify,
+    ok_or_print_err::ResultOkPrintErr,
+    pretty_duration::PrettyDuration,
 };
 
 #[tokio::main]
@@ -41,52 +41,25 @@ async fn main() -> Result<()> {
         anyhow::bail!("No music playing");
     };
 
+    // disable formatting to have everything neatly on one line
+    #[rustfmt::skip]
     match cli.command {
-        Commands::Status {
-            full_debug,
-            full_json,
-            id,
-            title,
-            artist,
-            progress,
-            duration,
-            is_playing,
-            repeat_state,
-            shuffle_state,
-            device,
-            playing_type,
-            is_liked,
-        } => {
-            if full_debug {
-                println!("{curr:#?}");
-            } else if full_json {
-                println!("{}", curr.to_json().await?);
-            } else if id {
-                println!("{}", curr.id);
-            } else if title {
-                println!("{}", curr.title);
-            } else if artist {
-                println!("{}", curr.artist);
-            } else if progress {
-                println!("{}", curr.progress.pretty());
-            } else if duration {
-                println!("{}", curr.duration.pretty());
-            } else if is_playing {
-                println!("{}", curr.is_playing);
-            } else if repeat_state {
-                println!("{:?}", curr.repeat_state);
-            } else if shuffle_state {
-                println!("{}", curr.shuffle_state);
-            } else if device {
-                println!("{}", curr.device);
-            } else if playing_type {
-                println!("{:?}", curr.playing_type);
-            } else if is_liked {
-                println!("{}", curr.is_liked().await?);
-            } else {
-                println!("{}", curr.display().await?);
-            }
-        },
+        // status
+        Commands::Status { full_debug: true, .. } => println!("{curr:#?}"),
+        Commands::Status { full_json: true, .. } => println!("{}", curr.to_json().await?),
+        Commands::Status { id: true, .. } => println!("{}", curr.id),
+        Commands::Status { title: true, .. } => println!("{}", curr.title),
+        Commands::Status { artist: true, .. } => println!("{}", curr.artist),
+        Commands::Status { progress: true, .. } => println!("{}", curr.progress.pretty()),
+        Commands::Status { duration: true, .. } => println!("{}", curr.duration.pretty()),
+        Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing),
+        Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state),
+        Commands::Status { shuffle_state: true, .. } => println!("{}", curr.shuffle_state),
+        Commands::Status { device: true, .. } => println!("{}", curr.device),
+        Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type),
+        Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
+        Commands::Status { .. } => println!("{}", curr.display().await?),
+        // control
         Commands::Play => curr.play().await.ok_or_print_err(),
         Commands::Pause => curr.pause().await.ok_or_print_err(),
         Commands::TogglePlayPause => curr.toggle_play_pause().await.ok_or_print_err(),
