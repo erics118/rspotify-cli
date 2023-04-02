@@ -3,32 +3,26 @@
 ```
 A cli to get information and control Spotify.
 
-Usage: rspotify-cli [OPTIONS] --client-id <CLIENT_ID> --client-secret <CLIENT_SECRET> [COMMAND]
+Usage: rspotify-cli <COMMAND>
 
 Commands:
-  debug               Print the entire status in a debug format
-  title               Print the title of the song
-  artist              Print the artist of the song
-  progress            Print the current progress in the song
-  duration            Print the length of the song
-  status              Print the status of the song
+  status              Print the current status
   play                Play the song if it was previously paused
   pause               Pause the song if it was previously playing
   toggle-play-pause   Toggle the state of the song between playing and paused
   like                Like the current song
   unlike              Unlike the current song
   toggle-like-unlike  Toggle like/unlike for the current song
+  previous            Go to the previous song
+  next                Go to the next song
+  cycle-repeat        Cycle between repeat states
+  repeat              Set the repeat state
+  volume              Set the volume
+  shuffle             Set the shuffle state
+  help                Print this message or the help of the given subcommand(s)
 
 Options:
-  -i, --client-id <CLIENT_ID>
-          [env: SPOTIFY_CLIENT_ID=]
-  -s, --client-secret <CLIENT_SECRET>
-          [env: SPOTIFY_CLIENT_SECRET=]
-  -r, --redirect-uri <REDIRECT_URL>
-          [env: SPOTIFY_REDIRECT_URL=] [default: http://localhost:8000/callback]
-  -h, --help
-          Print help information
-  -V, --version
-          Print version information
+  -h, --help     Print help
+  -V, --version  Print version
 ```
 

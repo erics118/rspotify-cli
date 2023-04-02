@@ -1,23 +1,23 @@
 [package]
 name = "rspotify-cli"
 version = "0.1.1"
-authors = ["es183923"]
+authors = ["erics118"]
 edition = "2021"
 rust-version = "1.65"
 description = "A cli to get information and control Spotify."
-repository = ""
+repository = "https://github.com/erics118/rspotify-cli"
 license = "MIT"
 keywords = ["spotify", "music"]
 categories = ["command-line-utilities"]
 publish = false
 
 [dependencies]
-anyhow = "1.0.66"
-clap = { version = "4.0.27", features = ["derive", "cargo"] }
-dirs = "4.0.0"
-rspotify = { version = "0.11.5", features = ["cli"] }
-serde = { version = "1.0.147", features = ["derive"] }
-serde_json = "1.0.89"
-thiserror = "1.0.37"
-tokio = { version = "1.24.2", features = ["full"] }
-toml = "0.5.9"
+anyhow = "1.0.70"
+clap = { version = "4.2.1", features = ["derive", "cargo"] }
+dirs = "5.0.0"
+rspotify = { version = "0.11.6", features = ["cli"] }
+serde = { version = "1.0.159", features = ["derive"] }
+serde_json = "1.0.95"
+thiserror = "1.0.40"
+tokio = { version = "1.27.0", features = ["full"] }
+toml = "0.7.3"

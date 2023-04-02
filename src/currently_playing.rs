@@ -1,4 +1,4 @@
-use std::{str::FromStr, time::Duration};
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use rspotify::{
@@ -10,6 +10,7 @@ use serde_json::json;
 
 use crate::{error::Error, repeat_state::RepeatState};
 
+// Stores aspects of the current playing state
 #[derive(Debug)]
 pub struct CurrentlyPlaying {
     spotify: AuthCodeSpotify,
@@ -31,8 +32,8 @@ impl CurrentlyPlaying {
             .current_playback(None, None::<Vec<_>>)
             .await?
             .context(Error::NotConnected)?;
-
-        // todo: lots of these won't work with local content
+        // println!("{:?}", curr.clone().item.unwrap());
+        // todo: might not work when playing local media
         match curr.item.context(Error::NotConnected)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 spotify,
@@ -88,7 +89,7 @@ impl CurrentlyPlaying {
     pub async fn is_liked(&self) -> Result<bool> {
         Ok(*self
             .spotify
-            .current_user_saved_tracks_contains(&[TrackId::from_str(&self.id)?])
+            .current_user_saved_tracks_contains([TrackId::from_uri(&self.id)?])
             .await?
             .first()
             .context(Error::Control("fetch like status"))?)
@@ -96,14 +97,14 @@ impl CurrentlyPlaying {
 
     pub async fn like(&self) -> Result<()> {
         self.spotify
-            .current_user_saved_tracks_add(&[TrackId::from_str(&self.id)?])
+            .current_user_saved_tracks_add([TrackId::from_uri(&self.id)?])
             .await
             .context(Error::Control("like song"))
     }
 
     pub async fn unlike(&self) -> Result<()> {
         self.spotify
-            .current_user_saved_tracks_delete(&[TrackId::from_str(&self.id)?])
+            .current_user_saved_tracks_delete([TrackId::from_uri(&self.id)?])
             .await
             .context(Error::Control("unlike song"))
     }
@@ -130,18 +131,18 @@ impl CurrentlyPlaying {
             .context(Error::Control("go to next song"))
     }
 
-    pub async fn repeat(&self, repeat_state: Option<RepeatState>) -> Result<()> {
-        if let Some(r) = repeat_state {
-            self.spotify
-                .repeat(&r.into(), None)
-                .await
-                .context(Error::Control("set repeat state"))
-        } else {
-            self.spotify
-                .repeat(&self.repeat_state.cycle().into(), None)
-                .await
-                .context(Error::Control("set repeat state"))
-        }
+    pub async fn cycle_repeat(&self) -> Result<()> {
+        self.spotify
+            .repeat(self.repeat_state.cycle().into(), None)
+            .await
+            .context(Error::Control("set repeat state"))
+    }
+
+    pub async fn repeat(&self, repeat_state: RepeatState) -> Result<()> {
+        self.spotify
+            .repeat(repeat_state.into(), None)
+            .await
+            .context(Error::Control("set repeat state"))
     }
 
     pub async fn volume(&self, volume: u8) -> Result<()> {
@@ -161,18 +162,22 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("set shuffle state"))
     }
+
     pub async fn display(&self) -> Result<String> {
         Ok(format!(
             "{} - {} {}",
             self.title,
             self.artist,
             if self.is_liked().await? {
-                "♥".to_string()
+                // filled heart
+                "\u{2665}".to_owned()
             } else {
-                "♡".to_string()
+                // empty heart
+                "\u{2661}".to_owned()
             },
         ))
     }
+
     pub async fn to_json(&self) -> Result<String> {
         Ok(json!({
             "id": self.id,

@@ -1,6 +1,7 @@
 use rspotify::ClientError;
 use thiserror::Error;
 
+// Error states for the cli
 #[derive(Debug, Error)]
 pub enum Error<'a> {
     #[error("The client id or client secret is invalid")]

@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum ConfigFile {
     Token,
     Config,
@@ -23,19 +23,19 @@ pub struct Config {
 }
 
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
-    let config_dir = home_dir().context(Error::Config)?.join(".config");
+    let config_dir = home_dir()
+        .context(Error::Config)?
+        .join(".config")
+        .join("rspotify-cli");
 
     if !config_dir.exists() {
         create_dir_all(config_dir.clone())?;
     }
 
-    let config_file = PathBuf::new()
-        .join(config_dir)
-        .join("rspotify-cli")
-        .join(match file_name {
-            ConfigFile::Token => "token.json",
-            ConfigFile::Config => "config.toml",
-        });
+    let config_file = PathBuf::new().join(config_dir).join(match file_name {
+        ConfigFile::Token => "token.json",
+        ConfigFile::Config => "config.toml",
+    });
 
     if !config_file.exists() {
         OpenOptions::new()

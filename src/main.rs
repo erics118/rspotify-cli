@@ -7,6 +7,7 @@
     unsafe_code,
     unused_qualifications
 )]
+#![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
 
 mod cli;
 mod config;
@@ -14,76 +15,20 @@ mod currently_playing;
 mod error;
 mod pretty_duration;
 mod repeat_state;
+mod ok_or_print_err;
+mod init_spotify;
 
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use clap::Parser;
-use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config as RSpotifyConfig, Credentials, OAuth};
 
 use crate::{
     cli::{Cli, Commands},
-    config::{get_config_path, load_config, Config, ConfigFile},
+    config::{load_config},
     currently_playing::CurrentlyPlaying,
-    error::Error,
+    pretty_duration::PrettyDuration,
+    ok_or_print_err::ResultOkPrintErr,
+    init_spotify::init_spotify,
 };
-
-async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
-    let rspotify_config = RSpotifyConfig {
-        token_cached: true,
-        cache_path: get_config_path(ConfigFile::Token).context(Error::Config)?,
-        ..Default::default()
-    };
-
-    let oauth = OAuth {
-        // use all scopes bc scopes are annoying
-        scopes: scopes!(
-            "ugc-image-upload",
-            "user-read-playback-state",
-            "user-modify-playback-state",
-            "user-read-currently-playing",
-            "app-remote-control",
-            "streaming",
-            "playlist-read-private",
-            "playlist-read-collaborative",
-            "playlist-modify-private",
-            "playlist-modify-public",
-            "user-follow-modify",
-            "user-follow-read",
-            "user-read-playback-position",
-            "user-top-read",
-            "user-read-recently-played",
-            "user-library-modify",
-            "user-library-read",
-            "user-read-email",
-            "user-read-private"
-        ),
-        redirect_uri: config.redirect_uri,
-        ..Default::default()
-    };
-
-    let creds = Credentials::new(&config.client_id, &config.client_secret);
-
-    let mut spotify = AuthCodeSpotify::with_config(creds, oauth, rspotify_config);
-
-    let url = spotify
-        .get_authorize_url(false)
-        .context(Error::AuthorizationURI)?;
-    spotify.prompt_for_token(&url).await.context(Error::Auth)?;
-
-    Ok(spotify)
-}
-
-pub trait ResultOkPrintErrExt<T> {
-    fn ok_or_print_err(self);
-}
-
-impl<T> ResultOkPrintErrExt<T> for Result<T> {
-    fn ok_or_print_err(self) {
-        match self {
-            Ok(_) => (),
-            Err(e) => eprintln!("{}", e),
-        }
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -95,12 +40,49 @@ async fn main() -> Result<()> {
         println!("No music playing");
         anyhow::bail!("No music playing");
     };
+
     match cli.command {
-        Commands::Status { debug, json } => {
-            if debug {
+        Commands::Status {
+            full_debug,
+            full_json,
+            id,
+            title,
+            artist,
+            progress,
+            duration,
+            is_playing,
+            repeat_state,
+            shuffle_state,
+            device,
+            playing_type,
+            is_liked,
+        } => {
+            if full_debug {
                 println!("{curr:#?}");
-            } else if json {
+            } else if full_json {
                 println!("{}", curr.to_json().await?);
+            } else if id {
+                println!("{}", curr.id);
+            } else if title {
+                println!("{}", curr.title);
+            } else if artist {
+                println!("{}", curr.artist);
+            } else if progress {
+                println!("{}", curr.progress.pretty());
+            } else if duration {
+                println!("{}", curr.duration.pretty());
+            } else if is_playing {
+                println!("{}", curr.is_playing);
+            } else if repeat_state {
+                println!("{:?}", curr.repeat_state);
+            } else if shuffle_state {
+                println!("{}", curr.shuffle_state);
+            } else if device {
+                println!("{}", curr.device);
+            } else if playing_type {
+                println!("{:?}", curr.playing_type);
+            } else if is_liked {
+                println!("{}", curr.is_liked().await?);
             } else {
                 println!("{}", curr.display().await?);
             }
@@ -113,6 +95,7 @@ async fn main() -> Result<()> {
         Commands::ToggleLikeUnlike => curr.toggle_like_unlike().await.ok_or_print_err(),
         Commands::Previous => curr.previous().await.ok_or_print_err(),
         Commands::Next => curr.next().await.ok_or_print_err(),
+        Commands::CycleRepeat => curr.cycle_repeat().await.ok_or_print_err(),
         Commands::Repeat { repeat } => curr.repeat(repeat).await.ok_or_print_err(),
         Commands::Volume { volume } => curr.volume(volume).await.ok_or_print_err(),
         Commands::Shuffle { shuffle } => curr.shuffle(shuffle).await.ok_or_print_err(),

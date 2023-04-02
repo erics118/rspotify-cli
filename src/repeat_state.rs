@@ -1,6 +1,7 @@
 use rspotify::model::RepeatState as RSpotifyRepeatState;
 use serde::{Deserialize, Serialize};
 
+// Allows for cycling between states and serialization
 #[derive(Debug, Serialize, Deserialize, clap::ValueEnum, Clone)]
 pub enum RepeatState {
     Off,
@@ -8,8 +9,9 @@ pub enum RepeatState {
     Track,
 }
 
+// return the next repeat state to cycle through
 impl RepeatState {
-    pub fn cycle(&self) -> Self {
+    pub const fn cycle(&self) -> Self {
         match self {
             Self::Off => Self::Context,
             Self::Context => Self::Track,
@@ -21,9 +23,9 @@ impl RepeatState {
 impl From<RSpotifyRepeatState> for RepeatState {
     fn from(val: RSpotifyRepeatState) -> Self {
         match val {
-            RSpotifyRepeatState::Off => RepeatState::Off,
-            RSpotifyRepeatState::Context => RepeatState::Context,
-            RSpotifyRepeatState::Track => RepeatState::Track,
+            RSpotifyRepeatState::Off => Self::Off,
+            RSpotifyRepeatState::Context => Self::Context,
+            RSpotifyRepeatState::Track => Self::Track,
         }
     }
 }
@@ -31,9 +33,9 @@ impl From<RSpotifyRepeatState> for RepeatState {
 impl From<RepeatState> for RSpotifyRepeatState {
     fn from(val: RepeatState) -> Self {
         match val {
-            RepeatState::Off => RSpotifyRepeatState::Off,
-            RepeatState::Context => RSpotifyRepeatState::Context,
-            RepeatState::Track => RSpotifyRepeatState::Track,
+            RepeatState::Off => Self::Off,
+            RepeatState::Context => Self::Context,
+            RepeatState::Track => Self::Track,
         }
     }
 }
