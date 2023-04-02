@@ -63,12 +63,14 @@ pub enum Commands {
     /// Pause the song if it was previously playing
     Pause,
     /// Toggle the state of the song between playing and paused
+    #[clap(name = "toggle-play")]
     TogglePlayPause,
     /// Like the current song
     Like,
     /// Unlike the current song
     Unlike,
     /// Toggle like/unlike for the current song
+    #[clap(name = "toggle-like")]
     ToggleLikeUnlike,
     /// Go to the previous song
     Previous,
