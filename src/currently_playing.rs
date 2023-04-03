@@ -182,6 +182,7 @@ impl CurrentlyPlaying {
     pub async fn to_json(&self) -> Result<String> {
         let mut json = serde_json::to_value(self)?;
 
+        // modify object to include `is_liked`, which requires a separate API call
         json.as_object_mut()
             .unwrap()
             .insert("is_liked".to_owned(), self.is_liked().await?.into());

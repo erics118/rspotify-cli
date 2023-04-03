@@ -24,7 +24,6 @@ repos:
       - id: fmt
         always_run: true
         files: '^.*\.rs$'
-        args: ["--verbose"]
       - id: cargo-check
         always_run: true
         files: '^.*\.rs$'
