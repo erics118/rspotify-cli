@@ -1,5 +1,5 @@
 use std::{
-    fs::{create_dir_all, read_to_string, OpenOptions},
+    fs::{create_dir_all, OpenOptions},
     path::PathBuf,
 };
 
@@ -51,9 +51,18 @@ pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
 #[allow(clippy::module_name_repetitions)]
 pub fn load_config() -> Result<Config> {
     let config_file = get_config_path(ConfigFile::Config)?;
-    let contents = read_to_string(config_file.clone())?;
-    let config = toml::from_str::<Config>(&contents)
+
+    let config = config::Config::builder()
+        .set_default("redirect_uri", "http://localhost:8000/callback")?
+        .add_source(config::File::from(config_file.clone()))
+        .add_source(config::Environment::with_prefix("SPOTIFY"))
+        .build()?
+        .try_deserialize::<Config>()
         .context(Error::IncompleteConfig(config_file.display().to_string()))?;
+
+    // let contents = read_to_string(config_file.clone())?;
+    // let config = toml::from_str::<Config>(&contents)
+    // .context(Error::IncompleteConfig(config_file.display().to_string()))?;
 
     Ok(config)
 }
