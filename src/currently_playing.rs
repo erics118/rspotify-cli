@@ -6,13 +6,14 @@ use rspotify::{
     prelude::*,
     AuthCodeSpotify,
 };
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::Error, repeat_state::RepeatState};
 
 // Stores aspects of the current playing state
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CurrentlyPlaying {
+    #[serde(skip)]
     spotify: AuthCodeSpotify,
     pub id: String,
     pub title: String,
@@ -179,19 +180,12 @@ impl CurrentlyPlaying {
     }
 
     pub async fn to_json(&self) -> Result<String> {
-        Ok(json!({
-            "id": self.id,
-            "title": self.title,
-            "artist": self.artist,
-            "progress": self.progress,
-            "duration": self.duration,
-            "is_playing": self.is_playing,
-            "repeat_state": self.repeat_state,
-            "shuffle_state": self.shuffle_state,
-            "device": self.device,
-            "playing_type": self.playing_type,
-            "is_liked": self.is_liked().await?,
-        })
-        .to_string())
+        let mut json = serde_json::to_value(self)?;
+
+        json.as_object_mut()
+            .unwrap()
+            .insert("is_liked".to_owned(), self.is_liked().await?.into());
+        Ok(json.to_string())
+        // Ok(json.is_object().to_string())
     }
 }
