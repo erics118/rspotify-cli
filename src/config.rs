@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum ConfigFile {
     Token,
@@ -47,6 +48,7 @@ pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
     Ok(config_file)
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub fn load_config() -> Result<Config> {
     let config_file = get_config_path(ConfigFile::Config)?;
     let contents = read_to_string(config_file.clone())?;
