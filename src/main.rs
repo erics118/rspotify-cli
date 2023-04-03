@@ -37,7 +37,6 @@ async fn main() -> Result<()> {
 
     let spotify = init_spotify(config).await?;
     let Ok(curr) = CurrentlyPlaying::new(spotify).await else {
-        println!("No music playing");
         anyhow::bail!("No music playing");
     };
 
