@@ -26,7 +26,7 @@ use crate::{
     config::load_config,
     currently_playing::CurrentlyPlaying,
     init_spotify::init_spotify,
-    ok_or_print_err::ResultOkPrintErr,
+    ok_or_print_err::OkOrPrintErr,
     pretty_duration::PrettyDuration,
 };
 

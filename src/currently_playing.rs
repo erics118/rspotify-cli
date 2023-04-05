@@ -33,7 +33,7 @@ impl CurrentlyPlaying {
             .current_playback(None, None::<Vec<_>>)
             .await?
             .context(Error::NotConnected)?;
-        // println!("{:?}", curr.clone().item.unwrap());
+
         // todo: might not work when playing local media
         match curr.item.context(Error::NotConnected)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
@@ -136,7 +136,7 @@ impl CurrentlyPlaying {
         self.spotify
             .repeat(self.repeat_state.cycle().into(), None)
             .await
-            .context(Error::Control("set repeat state"))
+            .context(Error::Control("cycle repeat state"))
     }
 
     pub async fn repeat(&self, repeat_state: RepeatState) -> Result<()> {
@@ -148,7 +148,8 @@ impl CurrentlyPlaying {
 
     pub async fn volume(&self, volume: u8) -> Result<()> {
         self.spotify
-            .volume(if volume > 100 { volume } else { 100 }, None)
+            // bc logic is hard, using .min() is confusing
+            .volume(volume.clamp(0, 100), None)
             .await
             .context(Error::Control("set volume"))
     }
@@ -198,7 +199,7 @@ impl CurrentlyPlaying {
         json.as_object_mut()
             .unwrap()
             .insert("is_liked".to_owned(), self.is_liked().await?.into());
+
         Ok(json.to_string())
-        // Ok(json.is_object().to_string())
     }
 }

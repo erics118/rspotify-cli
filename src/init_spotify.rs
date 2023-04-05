@@ -6,7 +6,7 @@ use crate::{
     error::Error,
 };
 
-// initialize spotify client object
+/// Initialize Spotify client object
 pub async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
     let rspotify_config = RSpotifyConfig {
         token_cached: true,
@@ -18,9 +18,9 @@ pub async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
         // use all scopes bc scopes are annoying
         scopes: scopes!(
             "ugc-image-upload",
-            "user-read-playback-state",
-            "user-modify-playback-state",
-            "user-read-currently-playing",
+            "user-read-playback-state",    // see player state
+            "user-modify-playback-state",  // control player stuff
+            "user-read-currently-playing", // see player state
             "app-remote-control",
             "streaming",
             "playlist-read-private",
@@ -30,10 +30,10 @@ pub async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
             "user-follow-modify",
             "user-follow-read",
             "user-read-playback-position",
-            "user-top-read",
-            "user-read-recently-played",
-            "user-library-modify",
-            "user-library-read",
+            "user-top-read",             // get top artists and tracks
+            "user-read-recently-played", // see recently played
+            "user-library-modify",       // add/remove liked songs
+            "user-library-read",         // see liked songs
             "user-read-email",
             "user-read-private"
         ),

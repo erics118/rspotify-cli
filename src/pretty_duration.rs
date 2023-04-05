@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+/// Convert duration to nicely formatted string
 pub trait PrettyDuration {
     fn pretty(self) -> String;
 }

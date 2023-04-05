@@ -1,10 +1,11 @@
 use anyhow::Result;
 
-pub trait ResultOkPrintErr<T> {
+/// Print error Err
+pub trait OkOrPrintErr<T> {
     fn ok_or_print_err(self);
 }
 
-impl<T> ResultOkPrintErr<T> for Result<T> {
+impl<T> OkOrPrintErr<T> for Result<T> {
     fn ok_or_print_err(self) {
         match self {
             Ok(_) => (),

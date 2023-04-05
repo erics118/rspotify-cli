@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
+/// File types stored in the config directory
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum ConfigFile {
@@ -16,6 +17,7 @@ pub enum ConfigFile {
     Config,
 }
 
+/// Config values
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub client_id: String,
