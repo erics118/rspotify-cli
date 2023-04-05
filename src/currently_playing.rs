@@ -8,7 +8,7 @@ use rspotify::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{error::Error, repeat_state::RepeatState};
+use crate::{error::Error, repeat_state::RepeatState, shuffle_state::ShuffleState};
 
 // Stores aspects of the current playing state
 #[derive(Debug, Serialize, Deserialize)]
@@ -22,7 +22,7 @@ pub struct CurrentlyPlaying {
     pub duration: Duration,
     pub is_playing: bool,
     pub repeat_state: RepeatState,
-    pub is_shuffled: bool,
+    pub is_shuffled: ShuffleState,
     pub device: String,
     pub playing_type: CurrentlyPlayingType,
 }
@@ -45,7 +45,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                is_shuffled: curr.shuffle_state,
+                is_shuffled: curr.shuffle_state.into(),
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -58,7 +58,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                is_shuffled: curr.shuffle_state,
+                is_shuffled: curr.shuffle_state.into(),
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -154,27 +154,41 @@ impl CurrentlyPlaying {
             .context(Error::Control("set volume"))
     }
 
-    pub async fn shuffle(&self, state: bool) -> Result<()> {
+    pub async fn shuffle(&self, state: ShuffleState) -> Result<()> {
         self.spotify
-            .shuffle(state, None)
+            .shuffle(state.into(), None)
             .await
             .context(Error::Control("set shuffle state"))
     }
 
     pub async fn toggle_shuffle(&self) -> Result<()> {
-        if self.is_shuffled {
-            self.shuffle(false).await
-        } else {
-            self.shuffle(true).await
+        match self.is_shuffled {
+            ShuffleState::Enabled => self.shuffle(ShuffleState::Disabled).await,
+            ShuffleState::Disabled => self.shuffle(ShuffleState::Enabled).await,
         }
     }
 
-    pub async fn share_url(&self) -> Result<String> {
-        Ok(TrackId::from_uri(&self.id)?.url())
+    pub async fn seek(&self, position: u32) -> Result<()> {
+        self.spotify
+            .seek_track(position, None)
+            .await
+            .context(Error::Control("seek position"))
     }
 
-    pub async fn share_uri(&self) -> Result<String> {
-        Ok(TrackId::from_uri(&self.id)?.uri())
+    pub async fn play_from_uri(&self, uri: String) -> Result<()> {
+        self.spotify
+            .start_uris_playback(
+                [PlayableId::from(TrackId::from_uri(&uri)?)],
+                None,
+                None,
+                None,
+            )
+            .await
+            .context(Error::Control("play from url"))
+    }
+
+    pub fn generate_url(&self) -> Result<String> {
+        Ok(TrackId::from_uri(&self.id)?.url())
     }
 
     pub async fn display(&self) -> Result<String> {

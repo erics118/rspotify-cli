@@ -14,9 +14,9 @@ mod config;
 mod currently_playing;
 mod error;
 mod init_spotify;
-mod ok_or_print_err;
 mod pretty_duration;
 mod repeat_state;
+mod shuffle_state;
 
 use anyhow::Result;
 use clap::Parser;
@@ -26,7 +26,6 @@ use crate::{
     config::load_config,
     currently_playing::CurrentlyPlaying,
     init_spotify::init_spotify,
-    ok_or_print_err::OkOrPrintErr,
     pretty_duration::PrettyDuration,
 };
 
@@ -47,39 +46,52 @@ async fn main() -> Result<()> {
         Commands::Status { debug: true, .. } => println!("{curr:#?}"),
         Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
         Commands::Status { id: true, .. } => println!("{}", curr.id),
+        Commands::Status { url: true, .. } => println!("{}", curr.generate_url()?),
         Commands::Status { title: true, .. } => println!("{}", curr.title),
         Commands::Status { artist: true, .. } => println!("{}", curr.artist),
         Commands::Status { progress: true, .. } => println!("{}", curr.progress.pretty()),
         Commands::Status { duration: true, .. } => println!("{}", curr.duration.pretty()),
         Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing),
         Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state),
-        Commands::Status { is_shuffled: true, .. } => println!("{}", curr.is_shuffled),
+        Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.is_shuffled),
         Commands::Status { device: true, .. } => println!("{}", curr.device),
         Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type),
         Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
         Commands::Status { .. } => println!("{}", curr.display().await?),
+
         // control
-        Commands::Play => curr.play().await.ok_or_print_err(),
-        Commands::Pause => curr.pause().await.ok_or_print_err(),
-        Commands::TogglePlayPause => curr.toggle_play_pause().await.ok_or_print_err(),
-        Commands::Like => curr.like().await.ok_or_print_err(),
-        Commands::Unlike => curr.unlike().await.ok_or_print_err(),
-        Commands::ToggleLikeUnlike => curr.toggle_like_unlike().await.ok_or_print_err(),
-        Commands::Previous => curr.previous().await.ok_or_print_err(),
-        Commands::Next => curr.next().await.ok_or_print_err(),
-        Commands::CycleRepeat => curr.cycle_repeat().await.ok_or_print_err(),
-        Commands::Repeat { repeat } => curr.repeat(repeat).await.ok_or_print_err(),
-        Commands::Volume { volume } => curr.volume(volume).await.ok_or_print_err(),
-        Commands::Shuffle { shuffle } => curr.shuffle(shuffle).await.ok_or_print_err(),
-        Commands::ToggleShuffle => curr.toggle_shuffle().await.ok_or_print_err(),
-        // share
-        Commands::Share { url: true, .. } => println!("{}", curr.share_url().await?),
-        Commands::Share { uri: true, .. } => println!("{}", curr.share_uri().await?),
-        Commands::Share { .. } => unimplemented!(),
-        // todo: add replay current song
-        // todo: go to position
-        // todo: play name/playlist/album/artist/uri/url
-        // todo: volume up/down, also add volume_increment to config
+        Commands::Control { play: true, .. } => curr.play().await?,
+        Commands::Control { pause: true, .. } => curr.pause().await?,
+        Commands::Control { toggle_play_pause: true, .. } => curr.toggle_play_pause().await?,
+        Commands::Control { like: true, .. } => curr.like().await?,
+        Commands::Control { unlike: true, .. } => curr.unlike().await?,
+        Commands::Control { toggle_like_unlike: true, .. } => curr.toggle_like_unlike().await?,
+        Commands::Control { previous: true, .. } => curr.previous().await?,
+        Commands::Control { next: true, .. } => curr.next().await?,
+        Commands::Control { cycle_repeat: true, .. } => curr.cycle_repeat().await?,
+        Commands::Control { repeat: Some(repeat), .. } => curr.repeat(repeat).await?,
+        Commands::Control { volume: Some(volume), .. } => curr.volume(volume).await?,
+        Commands::Control { shuffle: Some(shuffle), .. } => curr.shuffle(shuffle).await?,
+        Commands::Control { toggle_shuffle: true, .. } => curr.toggle_shuffle().await?,
+        Commands::Control { replay: true, .. } => todo!(),
+        Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
+        Commands::Control { volume_up: true, .. } => todo!(),
+        Commands::Control { volume_down: true, .. } => todo!(),
+        Commands::Control { .. } => unimplemented!(),
+
+        // play from
+        Commands::PlayFrom { playlist: Some(_playlist), .. } => todo!(),
+        Commands::PlayFrom { album: Some(_album), .. } => todo!(),
+        Commands::PlayFrom { artist: Some(_artist), .. } => todo!(),
+        Commands::PlayFrom { url: Some(_url), .. } => todo!(),
+        Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
+        Commands::PlayFrom { .. } => unimplemented!(),
+
+        // TODO: search for stuff
+
+        #[allow(unreachable_patterns)]
+        _ => todo!(),
     };
+
     Ok(())
 }

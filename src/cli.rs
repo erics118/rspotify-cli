@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::repeat_state::RepeatState;
+use crate::{repeat_state::RepeatState, shuffle_state::ShuffleState};
 
 #[derive(Debug, Parser, Clone)]
 #[command(
@@ -21,89 +21,153 @@ pub enum Commands {
         /// Print the full status in json to be used for external parsing
         #[arg(long, exclusive = true)]
         json: bool,
+
         /// Print the full status in the Rust debug format
         #[arg(long, exclusive = true)]
         debug: bool,
+
         /// Print the id
         #[arg(long, help_heading = "Display", exclusive = true)]
         id: bool,
+
+        /// Print the url
+        #[arg(long, help_heading = "Display", exclusive = true)]
+        url: bool,
+
         /// Print the title
         #[arg(long, help_heading = "Display", exclusive = true)]
         title: bool,
+
         /// Print the artist name
         #[arg(long, help_heading = "Display", exclusive = true)]
         artist: bool,
+
         /// Print the progress
         #[arg(long, help_heading = "Display", exclusive = true)]
         progress: bool,
+
         /// Print the duration
         #[arg(long, help_heading = "Display", exclusive = true)]
         duration: bool,
+
         /// Print if the song is currently playing
         #[arg(long, help_heading = "Display", exclusive = true)]
         is_playing: bool,
+
         /// Print the repeat_state
         #[arg(long, help_heading = "Display", exclusive = true)]
         repeat_state: bool,
+
         /// Print if it is shuffled
         #[arg(long, help_heading = "Display", exclusive = true)]
         is_shuffled: bool,
+
         /// Print the device name
         #[arg(long, help_heading = "Display", exclusive = true)]
         device: bool,
+
         /// Print the playing type
         #[arg(long, help_heading = "Display", exclusive = true)]
         playing_type: bool,
+
         /// Print if the song is liked
         #[arg(long, help_heading = "Display", exclusive = true)]
         is_liked: bool,
     },
-    /// Play the song if it was previously paused
-    Play,
-    /// Pause the song if it was previously playing
-    Pause,
-    /// Toggle the state of the song between playing and paused
-    #[clap(name = "toggle-play")]
-    TogglePlayPause,
-    /// Like the current song
-    Like,
-    /// Unlike the current song
-    Unlike,
-    /// Toggle like/unlike for the current song
-    #[clap(name = "toggle-like")]
-    ToggleLikeUnlike,
-    /// Go to the previous song
-    Previous,
-    /// Go to the next song
-    Next,
-    /// Cycle between repeat states
-    CycleRepeat,
-    /// Set the repeat state
-    Repeat {
-        /// New repeat state
-        repeat: RepeatState,
-    },
-    /// Set the volume
-    Volume {
-        /// New volume level
-        volume: u8,
-    },
-    /// Set the shuffle state
-    Shuffle {
-        /// New shuffle state
-        shuffle: bool,
-    },
-    /// Toggle the shuffle state
-    #[clap(name = "toggle-shuffle")]
-    ToggleShuffle,
-    /// Share the song
+
+    /// Control the current playback
     #[clap(arg_required_else_help = true)]
-    Share {
-        /// Share the song URL
+    Control {
+        /// Play the song if it was previously paused
         #[arg(long, exclusive = true)]
-        url: bool,
-        /// Share the song URI
+        play: bool,
+
+        /// Pause the song if it was previously playing
         #[arg(long, exclusive = true)]
-        uri: bool,
+        pause: bool,
+
+        /// Toggle the state of the song between playing and paused
+        #[arg(long = "toggle-play", exclusive = true)]
+        toggle_play_pause: bool,
+
+        /// Like the current song
+        #[arg(long, exclusive = true)]
+        like: bool,
+
+        /// Unlike the current song
+        #[arg(long, exclusive = true)]
+        unlike: bool,
+
+        /// Toggle like/unlike for the current song
+        #[arg(long = "toggle-like", exclusive = true)]
+        toggle_like_unlike: bool,
+
+        /// Go to the previous song
+        #[arg(long, exclusive = true)]
+        previous: bool,
+
+        /// Go to the next song
+        #[arg(long, exclusive = true)]
+        next: bool,
+
+        /// Set the repeat state
+        #[arg(long, exclusive = true, value_name = "STATE")]
+        repeat: Option<RepeatState>,
+
+        /// Cycle between repeat states
+        #[arg(long, exclusive = true)]
+        cycle_repeat: bool,
+
+        /// Set the volume
+        #[arg(long, exclusive = true)]
+        volume: Option<u8>,
+
+        /// Set the shuffle state
+        #[arg(long, exclusive = true, value_name = "STATE")]
+        shuffle: Option<ShuffleState>,
+
+        /// Toggle the shuffle state
+        #[arg(long, exclusive = true)]
+        toggle_shuffle: bool,
+
+        /// Replay the current song
+        #[arg(long, exclusive = true)]
+        replay: bool,
+
+        /// Seek to a location in the current song in milliseconds
+        #[arg(long, exclusive = true, value_name = "POSITION")]
+        seek: Option<u32>,
+
+        /// Increase volume by a set amount
+        #[arg(long, exclusive = true)]
+        volume_up: bool,
+
+        /// Decrease volume by a set amount
+        #[arg(long, exclusive = true)]
+        volume_down: bool,
+    },
+
+    /// Search and play songs
+    #[clap(arg_required_else_help = true)]
+    PlayFrom {
+        /// Search for an playlist and play it
+        #[arg(long, exclusive = true)]
+        playlist: Option<String>,
+
+        /// Search for an album and play it
+        #[arg(long, exclusive = true)]
+        album: Option<String>,
+
+        /// Search for an artist and play their top tracks
+        #[arg(long, exclusive = true)]
+        artist: Option<String>,
+
+        /// Search for a song's URL and play it
+        #[arg(long, exclusive = true)]
+        url: Option<String>,
+
+        /// Search for a song's URI and play it
+        #[arg(long, exclusive = true)]
+        uri: Option<String>,
     },
 }
