@@ -44,8 +44,8 @@ async fn main() -> Result<()> {
     #[rustfmt::skip]
     match cli.command {
         // status
-        Commands::Status { full_debug: true, .. } => println!("{curr:#?}"),
-        Commands::Status { full_json: true, .. } => println!("{}", curr.to_json().await?),
+        Commands::Status { debug: true, .. } => println!("{curr:#?}"),
+        Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
         Commands::Status { id: true, .. } => println!("{}", curr.id),
         Commands::Status { title: true, .. } => println!("{}", curr.title),
         Commands::Status { artist: true, .. } => println!("{}", curr.artist),
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
         Commands::Status { duration: true, .. } => println!("{}", curr.duration.pretty()),
         Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing),
         Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state),
-        Commands::Status { shuffle_state: true, .. } => println!("{}", curr.shuffle_state),
+        Commands::Status { is_shuffled: true, .. } => println!("{}", curr.is_shuffled),
         Commands::Status { device: true, .. } => println!("{}", curr.device),
         Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type),
         Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
@@ -71,6 +71,15 @@ async fn main() -> Result<()> {
         Commands::Repeat { repeat } => curr.repeat(repeat).await.ok_or_print_err(),
         Commands::Volume { volume } => curr.volume(volume).await.ok_or_print_err(),
         Commands::Shuffle { shuffle } => curr.shuffle(shuffle).await.ok_or_print_err(),
+        Commands::ToggleShuffle => curr.toggle_shuffle().await.ok_or_print_err(),
+        // share
+        Commands::Share { url: true, .. } => println!("{}", curr.share_url().await?),
+        Commands::Share { uri: true, .. } => println!("{}", curr.share_uri().await?),
+        Commands::Share { .. } => unimplemented!(),
+        // todo: add replay current song
+        // todo: go to position
+        // todo: play name/playlist/album/artist/uri/url
+        // todo: volume up/down, also add volume_increment to config
     };
     Ok(())
 }

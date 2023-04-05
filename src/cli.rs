@@ -19,11 +19,11 @@ pub enum Commands {
     /// Print the current status
     Status {
         /// Print the full status in json to be used for external parsing
-        #[arg(short = 'j', long, exclusive = true)]
-        full_json: bool,
+        #[arg(long, exclusive = true)]
+        json: bool,
         /// Print the full status in the Rust debug format
-        #[arg(short = 'd', long, exclusive = true)]
-        full_debug: bool,
+        #[arg(long, exclusive = true)]
+        debug: bool,
         /// Print the id
         #[arg(long, help_heading = "Display", exclusive = true)]
         id: bool,
@@ -45,9 +45,9 @@ pub enum Commands {
         /// Print the repeat_state
         #[arg(long, help_heading = "Display", exclusive = true)]
         repeat_state: bool,
-        /// Print the shuffle state
+        /// Print if it is shuffled
         #[arg(long, help_heading = "Display", exclusive = true)]
-        shuffle_state: bool,
+        is_shuffled: bool,
         /// Print the device name
         #[arg(long, help_heading = "Display", exclusive = true)]
         device: bool,
@@ -92,5 +92,18 @@ pub enum Commands {
     Shuffle {
         /// New shuffle state
         shuffle: bool,
+    },
+    /// Toggle the shuffle state
+    #[clap(name = "toggle-shuffle")]
+    ToggleShuffle,
+    /// Share the song
+    #[clap(arg_required_else_help = true)]
+    Share {
+        /// Share the song URL
+        #[arg(long, exclusive = true)]
+        url: bool,
+        /// Share the song URI
+        #[arg(long, exclusive = true)]
+        uri: bool,
     },
 }

@@ -22,7 +22,7 @@ pub struct CurrentlyPlaying {
     pub duration: Duration,
     pub is_playing: bool,
     pub repeat_state: RepeatState,
-    pub shuffle_state: bool,
+    pub is_shuffled: bool,
     pub device: String,
     pub playing_type: CurrentlyPlayingType,
 }
@@ -45,7 +45,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                shuffle_state: curr.shuffle_state,
+                is_shuffled: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -58,7 +58,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                shuffle_state: curr.shuffle_state,
+                is_shuffled: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -147,14 +147,10 @@ impl CurrentlyPlaying {
     }
 
     pub async fn volume(&self, volume: u8) -> Result<()> {
-        if volume <= 100 {
-            self.spotify
-                .volume(volume, None)
-                .await
-                .context(Error::Control("set volume"))
-        } else {
-            anyhow::bail!(Error::Control("attempted to set volume out of range"))
-        }
+        self.spotify
+            .volume(if volume > 100 { volume } else { 100 }, None)
+            .await
+            .context(Error::Control("set volume"))
     }
 
     pub async fn shuffle(&self, state: bool) -> Result<()> {
@@ -162,6 +158,22 @@ impl CurrentlyPlaying {
             .shuffle(state, None)
             .await
             .context(Error::Control("set shuffle state"))
+    }
+
+    pub async fn toggle_shuffle(&self) -> Result<()> {
+        if self.is_shuffled {
+            self.shuffle(false).await
+        } else {
+            self.shuffle(true).await
+        }
+    }
+
+    pub async fn share_url(&self) -> Result<String> {
+        Ok(TrackId::from_uri(&self.id)?.url())
+    }
+
+    pub async fn share_uri(&self) -> Result<String> {
+        Ok(TrackId::from_uri(&self.id)?.uri())
     }
 
     pub async fn display(&self) -> Result<String> {
