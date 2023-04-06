@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{value_parser, Parser, Subcommand};
 
 use crate::{repeat_state::RepeatState, shuffle_state::ShuffleState};
 
@@ -17,6 +17,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
     /// Print the current status
+    /// The API quickly forgets the song if it hasn't been playing for a while
     Status {
         /// Print the full status in json to be used for external parsing
         #[arg(long, exclusive = true)]
@@ -76,7 +77,7 @@ pub enum Commands {
     },
 
     /// Control the current playback
-    #[clap(arg_required_else_help = true)]
+    // #[clap(arg_required_else_help = true)]
     Control {
         /// Play the song if it was previously paused
         #[arg(long, exclusive = true)]
@@ -119,8 +120,16 @@ pub enum Commands {
         cycle_repeat: bool,
 
         /// Set the volume
-        #[arg(long, exclusive = true)]
+        #[arg(long, exclusive = true, value_parser = value_parser!(u8).range(0..=100))]
         volume: Option<u8>,
+
+        /// Increase volume by a set amount
+        #[arg(long, exclusive = true)]
+        volume_up: bool,
+
+        /// Decrease volume by a set amount
+        #[arg(long, exclusive = true)]
+        volume_down: bool,
 
         /// Set the shuffle state
         #[arg(long, exclusive = true, value_name = "STATE")]
@@ -130,21 +139,13 @@ pub enum Commands {
         #[arg(long, exclusive = true)]
         toggle_shuffle: bool,
 
-        /// Replay the current song
-        #[arg(long, exclusive = true)]
-        replay: bool,
-
         /// Seek to a location in the current song in milliseconds
         #[arg(long, exclusive = true, value_name = "POSITION")]
         seek: Option<u32>,
 
-        /// Increase volume by a set amount
+        /// Replay the current song
         #[arg(long, exclusive = true)]
-        volume_up: bool,
-
-        /// Decrease volume by a set amount
-        #[arg(long, exclusive = true)]
-        volume_down: bool,
+        replay: bool,
     },
 
     /// Search and play songs

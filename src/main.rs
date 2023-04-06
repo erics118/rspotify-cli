@@ -68,15 +68,15 @@ async fn main() -> Result<()> {
         Commands::Control { toggle_like_unlike: true, .. } => curr.toggle_like_unlike().await?,
         Commands::Control { previous: true, .. } => curr.previous().await?,
         Commands::Control { next: true, .. } => curr.next().await?,
-        Commands::Control { cycle_repeat: true, .. } => curr.cycle_repeat().await?,
         Commands::Control { repeat: Some(repeat), .. } => curr.repeat(repeat).await?,
+        Commands::Control { cycle_repeat: true, .. } => curr.cycle_repeat().await?,
         Commands::Control { volume: Some(volume), .. } => curr.volume(volume).await?,
+        Commands::Control { volume_up: true, .. } => curr.volume_up()?,
+        Commands::Control { volume_down: true, .. } => curr.volume_down()?,
         Commands::Control { shuffle: Some(shuffle), .. } => curr.shuffle(shuffle).await?,
         Commands::Control { toggle_shuffle: true, .. } => curr.toggle_shuffle().await?,
-        Commands::Control { replay: true, .. } => todo!(),
         Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
-        Commands::Control { volume_up: true, .. } => todo!(),
-        Commands::Control { volume_down: true, .. } => todo!(),
+        Commands::Control { replay: true, .. } => curr.replay().await?,
         Commands::Control { .. } => unimplemented!(),
 
         // play from
@@ -87,7 +87,7 @@ async fn main() -> Result<()> {
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
         Commands::PlayFrom { .. } => unimplemented!(),
 
-        // TODO: search for stuff
+        // TODO: search
 
         #[allow(unreachable_patterns)]
         _ => todo!(),

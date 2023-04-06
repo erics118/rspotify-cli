@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::Error, repeat_state::RepeatState, shuffle_state::ShuffleState};
 
-// Stores aspects of the current playing state
+/// Stores aspects of the current playing state
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CurrentlyPlaying {
     #[serde(skip)]
@@ -65,6 +65,15 @@ impl CurrentlyPlaying {
         }
     }
 
+    pub async fn is_liked(&self) -> Result<bool> {
+        Ok(*self
+            .spotify
+            .current_user_saved_tracks_contains([TrackId::from_uri(&self.id)?])
+            .await?
+            .first()
+            .context(Error::Control("fetch like status"))?)
+    }
+
     pub async fn play(&self) -> Result<()> {
         self.spotify
             .resume_playback(None, None)
@@ -85,15 +94,6 @@ impl CurrentlyPlaying {
         } else {
             self.play().await
         }
-    }
-
-    pub async fn is_liked(&self) -> Result<bool> {
-        Ok(*self
-            .spotify
-            .current_user_saved_tracks_contains([TrackId::from_uri(&self.id)?])
-            .await?
-            .first()
-            .context(Error::Control("fetch like status"))?)
     }
 
     pub async fn like(&self) -> Result<()> {
@@ -132,13 +132,6 @@ impl CurrentlyPlaying {
             .context(Error::Control("go to next song"))
     }
 
-    pub async fn cycle_repeat(&self) -> Result<()> {
-        self.spotify
-            .repeat(self.repeat_state.cycle().into(), None)
-            .await
-            .context(Error::Control("cycle repeat state"))
-    }
-
     pub async fn repeat(&self, repeat_state: RepeatState) -> Result<()> {
         self.spotify
             .repeat(repeat_state.into(), None)
@@ -146,12 +139,28 @@ impl CurrentlyPlaying {
             .context(Error::Control("set repeat state"))
     }
 
+    pub async fn cycle_repeat(&self) -> Result<()> {
+        self.spotify
+            .repeat(self.repeat_state.cycle().into(), None)
+            .await
+            .context(Error::Control("cycle repeat state"))
+    }
+
     pub async fn volume(&self, volume: u8) -> Result<()> {
+        // volume is already guaranteed to be in 0..=100 by clap
         self.spotify
             // bc logic is hard, using .min() is confusing
-            .volume(volume.clamp(0, 100), None)
+            .volume(volume, None)
             .await
             .context(Error::Control("set volume"))
+    }
+
+    pub fn volume_up(&self) -> Result<()> {
+        todo!()
+    }
+
+    pub fn volume_down(&self) -> Result<()> {
+        todo!()
     }
 
     pub async fn shuffle(&self, state: ShuffleState) -> Result<()> {
@@ -173,6 +182,10 @@ impl CurrentlyPlaying {
             .seek_track(position, None)
             .await
             .context(Error::Control("seek position"))
+    }
+
+    pub async fn replay(&self) -> Result<()> {
+        self.seek(0).await
     }
 
     pub async fn play_from_uri(&self, uri: String) -> Result<()> {
