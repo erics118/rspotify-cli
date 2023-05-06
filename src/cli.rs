@@ -148,27 +148,29 @@ pub enum Commands {
         replay: bool,
     },
 
-    /// Search and play songs
+    /// Play songs
     #[clap(arg_required_else_help = true)]
     PlayFrom {
-        /// Search for an playlist and play it
-        #[arg(long, exclusive = true)]
-        playlist: Option<String>,
-
-        /// Search for an album and play it
-        #[arg(long, exclusive = true)]
-        album: Option<String>,
-
-        /// Search for an artist and play their top tracks
-        #[arg(long, exclusive = true)]
-        artist: Option<String>,
-
-        /// Search for a song's URL and play it
+        /// Play a URL
         #[arg(long, exclusive = true)]
         url: Option<String>,
 
-        /// Search for a song's URI and play it
+        /// Play a URI
         #[arg(long, exclusive = true)]
         uri: Option<String>,
+    },
+
+    Search {
+        /// Search for an playlist
+        #[arg(long, exclusive = true)]
+        playlist: Option<String>,
+
+        /// Search for an album
+        #[arg(long, exclusive = true)]
+        album: Option<String>,
+
+        /// Search for an artist
+        #[arg(long, exclusive = true)]
+        artist: Option<String>,
     },
 }

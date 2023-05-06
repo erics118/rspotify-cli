@@ -5,23 +5,19 @@ use rspotify::{
     prelude::*,
     AuthCodeSpotify,
 };
-use serde::Serialize;
-use serde_with::{serde_as, DurationSeconds};
+use serde_json::json;
 
-use crate::{error::Error, repeat_state::RepeatState};
+use crate::{config::Config, error::Error, repeat_state::RepeatState};
 
 /// Stores aspects of the current playing state
-#[serde_as]
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct CurrentlyPlaying {
-    #[serde(skip)]
+    config: Config,
     spotify: AuthCodeSpotify,
     pub id: String,
     pub title: String,
     pub artist: String,
-    #[serde_as(as = "DurationSeconds<f64>")]
     pub progress: Duration,
-    #[serde_as(as = "DurationSeconds<f64>")]
     pub duration: Duration,
     pub volume: u8,
     pub is_playing: bool,
@@ -32,7 +28,7 @@ pub struct CurrentlyPlaying {
 }
 
 impl CurrentlyPlaying {
-    pub async fn new(spotify: AuthCodeSpotify) -> Result<Self> {
+    pub async fn new(spotify: AuthCodeSpotify, config: Config) -> Result<Self> {
         let curr = spotify
             .current_playback(None, None::<Vec<_>>)
             .await?
@@ -42,6 +38,7 @@ impl CurrentlyPlaying {
         match curr.item.context(Error::NotConnected)? {
             rspotify::model::PlayableItem::Track(t) => Ok(Self {
                 spotify,
+                config,
                 id: t.id.context(Error::MissingData("song id"))?.to_string(),
                 title: t.name,
                 artist: t
@@ -66,6 +63,7 @@ impl CurrentlyPlaying {
             }),
             rspotify::model::PlayableItem::Episode(t) => Ok(Self {
                 spotify,
+                config,
                 id: t.id.to_string(),
                 title: t.name,
                 artist: t.show.name,
@@ -86,6 +84,11 @@ impl CurrentlyPlaying {
         }
     }
 
+    // status
+    pub fn generate_url(&self) -> Result<String> {
+        Ok(TrackId::from_uri(&self.id)?.url())
+    }
+
     pub async fn is_liked(&self) -> Result<bool> {
         Ok(*self
             .spotify
@@ -95,6 +98,39 @@ impl CurrentlyPlaying {
             .context(Error::Control("fetch like status"))?)
     }
 
+    pub async fn display(&self) -> Result<String> {
+        Ok(format!(
+            "{} - {} {}",
+            self.title,
+            self.artist,
+            if self.is_liked().await? {
+                // filled heart
+                "\u{2665}".to_owned()
+            } else {
+                // empty heart
+                "\u{2661}".to_owned()
+            },
+        ))
+    }
+
+    pub async fn to_json(&self) -> Result<String> {
+        Ok(json!({
+            "id": self.id,
+            "title": self.title,
+            "artist": self.artist,
+            "progress": self.progress.num_seconds(),
+            "duration": self.duration.num_seconds(),
+            "is_playing": self.is_playing,
+            "repeat_state": self.repeat_state,
+            "is_shuffle": self.is_shuffled,
+            "device": self.device,
+            "playing_type": self.playing_type,
+            "is_liked": self.is_liked().await?,
+        })
+        .to_string())
+    }
+
+    // control
     pub async fn play(&self) -> Result<()> {
         self.spotify
             .resume_playback(None, None)
@@ -176,14 +212,20 @@ impl CurrentlyPlaying {
 
     pub async fn volume_up(&self) -> Result<()> {
         self.spotify
-            .volume((self.volume + 10).clamp(0, 100), None)
+            .volume(
+                (self.volume + self.config.volume_increment).clamp(0, 100),
+                None,
+            )
             .await
             .context(Error::Control("volume up"))
     }
 
     pub async fn volume_down(&self) -> Result<()> {
         self.spotify
-            .volume((self.volume - 10).clamp(0, 100), None)
+            .volume(
+                (self.volume - self.config.volume_increment).clamp(0, 100),
+                None,
+            )
             .await
             .context(Error::Control("volume down"))
     }
@@ -210,6 +252,7 @@ impl CurrentlyPlaying {
         self.seek(0).await
     }
 
+    // play from
     pub async fn play_from_uri(&self, uri: String) -> Result<()> {
         self.spotify
             .start_uris_playback(
@@ -220,35 +263,5 @@ impl CurrentlyPlaying {
             )
             .await
             .context(Error::Control("play from url"))
-    }
-
-    pub fn generate_url(&self) -> Result<String> {
-        Ok(TrackId::from_uri(&self.id)?.url())
-    }
-
-    pub async fn display(&self) -> Result<String> {
-        Ok(format!(
-            "{} - {} {}",
-            self.title,
-            self.artist,
-            if self.is_liked().await? {
-                // filled heart
-                "\u{2665}".to_owned()
-            } else {
-                // empty heart
-                "\u{2661}".to_owned()
-            },
-        ))
-    }
-
-    pub async fn to_json(&self) -> Result<String> {
-        let mut json = serde_json::to_value(self)?;
-
-        // modify object to include `is_liked`, which requires a separate API call
-        json.as_object_mut()
-            .unwrap()
-            .insert("is_liked".to_owned(), self.is_liked().await?.into());
-
-        Ok(json.to_string())
     }
 }

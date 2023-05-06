@@ -33,8 +33,8 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     let config = load_config()?;
 
-    let spotify = init_spotify(config).await?;
-    let Ok(curr) = CurrentlyPlaying::new(spotify).await else {
+    let spotify = init_spotify(config.clone()).await?;
+    let Ok(curr) = CurrentlyPlaying::new(spotify, config).await else {
         anyhow::bail!("No music playing");
     };
 
@@ -78,15 +78,16 @@ async fn main() -> Result<()> {
         Commands::Control { replay: true, .. } => curr.replay().await?,
         Commands::Control { .. } => unimplemented!(),
 
-        // play from
-        Commands::PlayFrom { playlist: Some(_playlist), .. } => todo!(),
-        Commands::PlayFrom { album: Some(_album), .. } => todo!(),
-        Commands::PlayFrom { artist: Some(_artist), .. } => todo!(),
+        // TODO: play from
         Commands::PlayFrom { url: Some(_url), .. } => todo!(),
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
         Commands::PlayFrom { .. } => unimplemented!(),
 
         // TODO: search
+        Commands::Search { playlist: Some(_playlist), .. } => todo!(),
+        Commands::Search { album: Some(_album), .. } => todo!(),
+        Commands::Search { artist: Some(_artist), .. } => todo!(),
+        Commands::Search { .. } => unimplemented!(),
 
         #[allow(unreachable_patterns)]
         _ => todo!(),

@@ -18,11 +18,12 @@ pub enum ConfigFile {
 }
 
 /// Config values
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub client_id: String,
     pub client_secret: String,
     pub redirect_uri: String,
+    pub volume_increment: u8,
 }
 
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
@@ -56,15 +57,12 @@ pub fn load_config() -> Result<Config> {
 
     let config = config::Config::builder()
         .set_default("redirect_uri", "http://localhost:8000/callback")?
+        .set_default("volume_increment", 10u8)?
         .add_source(config::File::from(config_file.clone()))
         .add_source(config::Environment::with_prefix("SPOTIFY"))
         .build()?
         .try_deserialize::<Config>()
         .context(Error::IncompleteConfig(config_file.display().to_string()))?;
-
-    // let contents = read_to_string(config_file.clone())?;
-    // let config = toml::from_str::<Config>(&contents)
-    // .context(Error::IncompleteConfig(config_file.display().to_string()))?;
 
     Ok(config)
 }
