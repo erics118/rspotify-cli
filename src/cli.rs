@@ -1,6 +1,6 @@
 use clap::{value_parser, Parser, Subcommand};
 
-use crate::{repeat_state::RepeatState, shuffle_state::ShuffleState};
+use crate::repeat_state::RepeatState;
 
 #[derive(Debug, Parser, Clone)]
 #[command(
@@ -133,7 +133,7 @@ pub enum Commands {
 
         /// Set the shuffle state
         #[arg(long, exclusive = true, value_name = "STATE")]
-        shuffle: Option<ShuffleState>,
+        shuffle: Option<bool>,
 
         /// Toggle the shuffle state
         #[arg(long, exclusive = true)]

@@ -8,7 +8,7 @@ use rspotify::{
 use serde::Serialize;
 use serde_with::{serde_as, DurationSeconds};
 
-use crate::{error::Error, repeat_state::RepeatState, shuffle_state::ShuffleState};
+use crate::{error::Error, repeat_state::RepeatState};
 
 /// Stores aspects of the current playing state
 #[serde_as]
@@ -25,7 +25,7 @@ pub struct CurrentlyPlaying {
     pub duration: Duration,
     pub is_playing: bool,
     pub repeat_state: RepeatState,
-    pub is_shuffled: ShuffleState,
+    pub is_shuffled: bool,
     pub device: String,
     pub playing_type: CurrentlyPlayingType,
 }
@@ -48,7 +48,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                is_shuffled: curr.shuffle_state.into(),
+                is_shuffled: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -61,7 +61,7 @@ impl CurrentlyPlaying {
                 duration: t.duration,
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
-                is_shuffled: curr.shuffle_state.into(),
+                is_shuffled: curr.shuffle_state,
                 device: curr.device.name,
                 playing_type: curr.currently_playing_type,
             }),
@@ -166,18 +166,15 @@ impl CurrentlyPlaying {
         todo!()
     }
 
-    pub async fn shuffle(&self, state: ShuffleState) -> Result<()> {
+    pub async fn shuffle(&self, state: bool) -> Result<()> {
         self.spotify
-            .shuffle(state.into(), None)
+            .shuffle(state, None)
             .await
             .context(Error::Control("set shuffle state"))
     }
 
     pub async fn toggle_shuffle(&self) -> Result<()> {
-        match self.is_shuffled {
-            ShuffleState::Enabled => self.shuffle(ShuffleState::Disabled).await,
-            ShuffleState::Disabled => self.shuffle(ShuffleState::Enabled).await,
-        }
+        self.shuffle(!self.is_shuffled).await
     }
 
     pub async fn seek(&self, position: u32) -> Result<()> {

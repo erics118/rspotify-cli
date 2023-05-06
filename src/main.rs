@@ -16,7 +16,6 @@ mod error;
 mod init_spotify;
 mod pretty_duration;
 mod repeat_state;
-mod shuffle_state;
 
 use anyhow::Result;
 use clap::Parser;
