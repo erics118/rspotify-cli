@@ -77,7 +77,7 @@ pub enum Commands {
     },
 
     /// Control the current playback
-    // #[clap(arg_required_else_help = true)]
+    #[clap(arg_required_else_help = true)]
     Control {
         /// Play the song if it was previously paused
         #[arg(long, exclusive = true)]
@@ -139,7 +139,7 @@ pub enum Commands {
         #[arg(long, exclusive = true)]
         toggle_shuffle: bool,
 
-        /// Seek to a location in the current song in milliseconds
+        /// Seek to a location in the current song in seconds
         #[arg(long, exclusive = true, value_name = "POSITION")]
         seek: Option<u32>,
 

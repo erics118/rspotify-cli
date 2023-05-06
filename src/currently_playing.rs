@@ -1,24 +1,27 @@
-use std::time::Duration;
-
 use anyhow::{Context, Result};
+use chrono::Duration;
 use rspotify::{
     model::{CurrentlyPlayingType, TrackId},
     prelude::*,
     AuthCodeSpotify,
 };
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use serde_with::{serde_as, DurationSeconds};
 
 use crate::{error::Error, repeat_state::RepeatState, shuffle_state::ShuffleState};
 
 /// Stores aspects of the current playing state
-#[derive(Debug, Serialize, Deserialize)]
+#[serde_as]
+#[derive(Debug, Serialize)]
 pub struct CurrentlyPlaying {
     #[serde(skip)]
     spotify: AuthCodeSpotify,
     pub id: String,
     pub title: String,
     pub artist: String,
+    #[serde_as(as = "DurationSeconds<f64>")]
     pub progress: Duration,
+    #[serde_as(as = "DurationSeconds<f64>")]
     pub duration: Duration,
     pub is_playing: bool,
     pub repeat_state: RepeatState,
@@ -179,7 +182,7 @@ impl CurrentlyPlaying {
 
     pub async fn seek(&self, position: u32) -> Result<()> {
         self.spotify
-            .seek_track(position, None)
+            .seek_track(chrono::Duration::seconds(position.into()), None)
             .await
             .context(Error::Control("seek position"))
     }
