@@ -23,6 +23,7 @@ pub struct CurrentlyPlaying {
     pub progress: Duration,
     #[serde_as(as = "DurationSeconds<f64>")]
     pub duration: Duration,
+    pub volume: u8,
     pub is_playing: bool,
     pub repeat_state: RepeatState,
     pub is_shuffled: bool,
@@ -43,9 +44,20 @@ impl CurrentlyPlaying {
                 spotify,
                 id: t.id.context(Error::MissingData("song id"))?.to_string(),
                 title: t.name,
-                artist: t.artists.first().cloned().context("song artist")?.name,
+                artist: t
+                    .artists
+                    .first()
+                    .cloned()
+                    .context(Error::MissingData("song artist"))?
+                    .name,
                 progress: curr.progress.context(Error::MissingData("song progress"))?,
                 duration: t.duration,
+                volume: curr
+                    .device
+                    .volume_percent
+                    .context(Error::MissingData("volume"))?
+                    .try_into()
+                    .unwrap(),
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
                 is_shuffled: curr.shuffle_state,
@@ -59,6 +71,12 @@ impl CurrentlyPlaying {
                 artist: t.show.name,
                 progress: curr.progress.context(Error::MissingData("song progress"))?,
                 duration: t.duration,
+                volume: curr
+                    .device
+                    .volume_percent
+                    .context(Error::MissingData("volume"))?
+                    .try_into()
+                    .unwrap(),
                 is_playing: curr.is_playing,
                 repeat_state: curr.repeat_state.into(),
                 is_shuffled: curr.shuffle_state,
@@ -149,21 +167,25 @@ impl CurrentlyPlaying {
             .context(Error::Control("cycle repeat state"))
     }
 
-    pub async fn volume(&self, volume: u8) -> Result<()> {
-        // volume is already guaranteed to be in 0..=100 by clap
+    pub async fn set_volume(&self, volume: u8) -> Result<()> {
         self.spotify
-            // bc logic is hard, using .min() is confusing
-            .volume(volume, None)
+            .volume(volume.clamp(0, 100), None)
             .await
             .context(Error::Control("set volume"))
     }
 
-    pub fn volume_up(&self) -> Result<()> {
-        todo!()
+    pub async fn volume_up(&self) -> Result<()> {
+        self.spotify
+            .volume((self.volume + 10).clamp(0, 100), None)
+            .await
+            .context(Error::Control("volume up"))
     }
 
-    pub fn volume_down(&self) -> Result<()> {
-        todo!()
+    pub async fn volume_down(&self) -> Result<()> {
+        self.spotify
+            .volume((self.volume - 10).clamp(0, 100), None)
+            .await
+            .context(Error::Control("volume down"))
     }
 
     pub async fn shuffle(&self, state: bool) -> Result<()> {
