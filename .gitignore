@@ -1,5 +1,4 @@
 # cargo
-debug/
 target/
 
 # rustfmt
@@ -11,6 +10,3 @@ target/
 # env files
 .env
 *.env
-
-# config for spotify cli
-.spotify_cache
