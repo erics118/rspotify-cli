@@ -1,6 +1,5 @@
 use clap::{value_parser, Parser, Subcommand};
-
-use crate::repeat_state::RepeatState;
+use rspotify_cli_lib::repeat_state::RepeatState;
 
 #[derive(Debug, Parser, Clone)]
 #[command(

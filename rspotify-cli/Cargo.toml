@@ -1,0 +1,18 @@
+[package]
+name = "rspotify-cli"
+version = "0.1.2"
+authors = ["erics118"]
+edition = "2021"
+rust-version = "1.65"
+description = "A cli to get information and control Spotify."
+repository = "https://github.com/erics118/rspotify-cli"
+license = "MIT"
+keywords = ["spotify", "music"]
+categories = ["command-line-utilities"]
+publish = false
+
+[dependencies]
+rspotify-cli-lib = { path = "../rspotify-cli-lib" }
+anyhow = "1.0.71"
+clap = { version = "4.2.7", features = ["derive", "cargo", "env"] }
+tokio = { version = "1.28.1", features = ["full"] }

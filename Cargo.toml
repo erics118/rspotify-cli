@@ -1,24 +1,2 @@
-[package]
-name = "rspotify-cli"
-version = "0.1.2"
-authors = ["erics118"]
-edition = "2021"
-rust-version = "1.65"
-description = "A cli to get information and control Spotify."
-repository = "https://github.com/erics118/rspotify-cli"
-license = "MIT"
-keywords = ["spotify", "music"]
-categories = ["command-line-utilities"]
-publish = false
-
-[dependencies]
-anyhow = "1.0.71"
-chrono = "0.4.24"
-clap = { version = "4.2.7", features = ["derive", "cargo", "env"] }
-config = { version = "0.13.3", features = ["toml"] }
-dirs = "5.0.1"
-rspotify = { version = "0.11.7", features = ["cli"] }
-serde = { version = "1.0.162", features = ["derive"] }
-serde_json = { version = "1.0.96", features = ["preserve_order"] }
-thiserror = "1.0.40"
-tokio = { version = "1.28.0", features = ["full"] }
+[workspace]
+members = ["rspotify-cli", "rspotify-cli-lib"]

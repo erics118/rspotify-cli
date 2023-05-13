@@ -7,26 +7,18 @@
     unsafe_code,
     unused_qualifications
 )]
-#![warn(clippy::all, clippy::pedantic, clippy::nursery, clippy::cargo)]
+#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod cli;
-mod config;
-mod currently_playing;
-mod error;
-mod init_spotify;
-mod pretty_duration;
-mod repeat_state;
 
 use anyhow::Result;
 use clap::Parser;
-
-use crate::{
-    cli::{Cli, Commands},
-    config::load_config,
-    currently_playing::CurrentlyPlaying,
-    init_spotify::init_spotify,
+use rspotify_cli_lib::{
+    config::load_config, currently_playing::CurrentlyPlaying, init_spotify::init_spotify,
     pretty_duration::PrettyDuration,
 };
+
+use crate::cli::{Cli, Commands};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -90,7 +82,7 @@ async fn main() -> Result<()> {
         Commands::Search { .. } => unimplemented!(),
 
         #[allow(unreachable_patterns)]
-        _ => todo!(),
+        _ => unimplemented!(),
     };
 
     Ok(())
