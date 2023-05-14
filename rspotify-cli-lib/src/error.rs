@@ -8,8 +8,8 @@ pub enum Error<'a> {
     Auth,
     #[error("Unable to create authorization URI")]
     AuthorizationURI,
-    #[error("Spotify client is not connected")]
-    NotConnected,
+    #[error("No active device found")]
+    NoActiveDevice,
     #[error("Can't open or create config file")]
     Config,
     #[error("Missing data in the track metadata: {0}")]
@@ -22,6 +22,6 @@ pub enum Error<'a> {
 
 impl From<ClientError> for Error<'_> {
     fn from(_: ClientError) -> Self {
-        Self::NotConnected
+        Self::NoActiveDevice
     }
 }

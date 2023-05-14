@@ -22,10 +22,10 @@ pub struct CurrentlyPlaying {
 impl CurrentlyPlaying {
     pub async fn new(spotify: AuthCodeSpotify, config: Config) -> Result<Self> {
         if let Some(curr) = spotify.current_playback(None, None::<Vec<_>>).await?
-        // .context(Error::NotConnected)?;
+        // .context(Error::NoActiveDevice)?;
         {
             // TODO: might not work when playing local media
-            match curr.item.context(Error::NotConnected)? {
+            match curr.item.context(Error::NoActiveDevice)? {
                 rspotify::model::PlayableItem::Track(t) => Ok(Self {
                     spotify,
                     config,
@@ -85,14 +85,14 @@ impl CurrentlyPlaying {
         }
     }
     pub fn generate_url(&self) -> Result<String> {
-        Ok(TrackId::from_uri(&self.data.clone().context(Error::NotConnected)?.id)?.url())
+        Ok(TrackId::from_uri(&self.data.clone().context(Error::NoActiveDevice)?.id)?.url())
     }
 
     pub async fn is_liked(&self) -> Result<bool> {
         Ok(*self
             .spotify
             .current_user_saved_tracks_contains([TrackId::from_uri(
-                &self.data.clone().context(Error::NotConnected)?.id,
+                &self.data.clone().context(Error::NoActiveDevice)?.id,
             )?])
             .await?
             .first()
@@ -100,7 +100,7 @@ impl CurrentlyPlaying {
     }
 
     pub async fn display(&self) -> Result<String> {
-        let data = self.data.clone().context(Error::NotConnected)?;
+        let data = self.data.clone().context(Error::NoActiveDevice)?;
         Ok(format!(
             "{} - {} {}",
             data.title,
@@ -116,7 +116,7 @@ impl CurrentlyPlaying {
     }
 
     pub async fn to_json(&self) -> Result<String> {
-        let data = self.data.clone().context(Error::NotConnected)?;
+        let data = self.data.clone().context(Error::NoActiveDevice)?;
 
         Ok(json!({
             "id": data.id,
@@ -149,7 +149,7 @@ impl CurrentlyPlaying {
     }
 
     pub async fn toggle_play_pause(&self) -> Result<()> {
-        if self.data.clone().context(Error::NotConnected)?.is_playing {
+        if self.data.clone().context(Error::NoActiveDevice)?.is_playing {
             self.pause().await
         } else {
             self.play().await
@@ -159,7 +159,7 @@ impl CurrentlyPlaying {
     pub async fn like(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_add([TrackId::from_uri(
-                &self.data.clone().context(Error::NotConnected)?.id,
+                &self.data.clone().context(Error::NoActiveDevice)?.id,
             )?])
             .await
             .context(Error::Control("like song"))
@@ -168,7 +168,7 @@ impl CurrentlyPlaying {
     pub async fn unlike(&self) -> Result<()> {
         self.spotify
             .current_user_saved_tracks_delete([TrackId::from_uri(
-                &self.data.clone().context(Error::NotConnected)?.id,
+                &self.data.clone().context(Error::NoActiveDevice)?.id,
             )?])
             .await
             .context(Error::Control("unlike song"))
@@ -208,7 +208,7 @@ impl CurrentlyPlaying {
             .repeat(
                 self.data
                     .clone()
-                    .context(Error::NotConnected)?
+                    .context(Error::NoActiveDevice)?
                     .repeat_state
                     .cycle()
                     .into(),
@@ -228,7 +228,7 @@ impl CurrentlyPlaying {
     pub async fn volume_up(&self) -> Result<()> {
         self.spotify
             .volume(
-                (self.data.clone().context(Error::NotConnected)?.volume
+                (self.data.clone().context(Error::NoActiveDevice)?.volume
                     + self.config.volume_increment)
                     .clamp(0, 100),
                 None,
@@ -240,7 +240,7 @@ impl CurrentlyPlaying {
     pub async fn volume_down(&self) -> Result<()> {
         self.spotify
             .volume(
-                (self.data.clone().context(Error::NotConnected)?.volume
+                (self.data.clone().context(Error::NoActiveDevice)?.volume
                     - self.config.volume_increment)
                     .clamp(0, 100),
                 None,
@@ -257,8 +257,14 @@ impl CurrentlyPlaying {
     }
 
     pub async fn toggle_shuffle(&self) -> Result<()> {
-        self.shuffle(!self.data.clone().context(Error::NotConnected)?.is_shuffled)
-            .await
+        self.shuffle(
+            !self
+                .data
+                .clone()
+                .context(Error::NoActiveDevice)?
+                .is_shuffled,
+        )
+        .await
     }
 
     pub async fn seek(&self, position: u32) -> Result<()> {
