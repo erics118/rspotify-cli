@@ -155,6 +155,7 @@ pub enum Commands {
         uri: Option<String>,
     },
 
+    // TODO: add pagination and limit per page options
     /// Search anything
     #[clap(arg_required_else_help = true)]
     Search {
