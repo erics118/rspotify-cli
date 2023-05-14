@@ -8,9 +8,10 @@ A cli to get information and control Spotify.
 Usage: rspotify-cli <COMMAND>
 
 Commands:
-  status     Print the current status
+  status     Print the current status. The API quickly forgets the song if it hasn't been playing for a while
   control    Control the current playback
-  play-from  Search and play songs
+  play-from  Play songs
+  search     Search anything
   help       Print this message or the help of the given subcommand(s)
 
 Options:
@@ -21,14 +22,13 @@ Options:
 ```
 > cargo q status --help
 
-Print the current status
+Print the current status. The API quickly forgets the song if it hasn't been playing for a while
 
 Usage: rspotify-cli status [OPTIONS]
 
 Options:
-      --json   Print the full status in json to be used for external parsing
-      --debug  Print the full status in the Rust debug format
-  -h, --help   Print help
+      --json  Print the full status in json to be used for external parsing
+  -h, --help  Print help
 
 Display:
       --id            Print the id
@@ -43,7 +43,6 @@ Display:
       --device        Print the device name
       --playing-type  Print the playing type
       --is-liked      Print if the song is liked
-
 ```
 
 ```
@@ -65,28 +64,26 @@ Options:
       --repeat <STATE>   Set the repeat state [possible values: off, context, track]
       --cycle-repeat     Cycle between repeat states
       --volume <VOLUME>  Set the volume
-      --shuffle <STATE>  Set the shuffle state [possible values: enabled, disabled]
-      --toggle-shuffle   Toggle the shuffle state
-      --replay           Replay the current song
-      --seek <POSITION>  Seek to a location in the current song in milliseconds
       --volume-up        Increase volume by a set amount
       --volume-down      Decrease volume by a set amount
+      --shuffle <STATE>  Set the shuffle state [possible values: true, false]
+      --toggle-shuffle   Toggle the shuffle state
+      --seek <POSITION>  Seek to a location in the current song in seconds
+      --replay           Replay the current song
   -h, --help             Print help
-
 ```
 
 ```
-> rspotify-cli play-from --help
+Search anything
 
-Search and play songs
-
-Usage: rspotify-cli play-from [OPTIONS]
+Usage: rspotify-cli search [OPTIONS]
 
 Options:
-      --playlist <PLAYLIST>  Search for an playlist and play it
-      --album <ALBUM>        Search for an album and play it
-      --artist <ARTIST>      Search for an artist and play their top tracks
-      --url <URL>            Search for a song's URL and play it
-      --uri <URI>            Search for a song's URI and play it
+      --artist <ARTIST>      Search for artists
+      --album <ALBUM>        Search for albums
+      --track <TRACK>        Search for tracks
+      --playlist <PLAYLIST>  Search for playlists
+      --show <SHOW>          Search for shows
+      --episode <EPISODE>    Search for episodes
   -h, --help                 Print help
 ```

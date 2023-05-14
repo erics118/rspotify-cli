@@ -26,6 +26,7 @@ pub struct Config {
     pub volume_increment: u8,
 }
 
+// TODO: move to rspotify-cli instead
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
     let config_dir = home_dir()
         .context(Error::Config)?

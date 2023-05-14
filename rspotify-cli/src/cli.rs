@@ -15,16 +15,12 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
-    /// Print the current status
+    /// Print the current status.
     /// The API quickly forgets the song if it hasn't been playing for a while
     Status {
         /// Print the full status in json to be used for external parsing
         #[arg(long, exclusive = true)]
         json: bool,
-
-        /// Print the full status in the Rust debug format
-        #[arg(long, exclusive = true)]
-        debug: bool,
 
         /// Print the id
         #[arg(long, help_heading = "Display", exclusive = true)]
@@ -159,17 +155,28 @@ pub enum Commands {
         uri: Option<String>,
     },
 
+    /// Search anything
     Search {
-        /// Search for an playlist
+        /// Search for artists
         #[arg(long, exclusive = true)]
-        playlist: Option<String>,
+        artist: Option<String>,
 
-        /// Search for an album
+        /// Search for albums
         #[arg(long, exclusive = true)]
         album: Option<String>,
 
-        /// Search for an artist
+        /// Search for tracks
         #[arg(long, exclusive = true)]
-        artist: Option<String>,
+        track: Option<String>,
+
+        /// Search for playlists
+        #[arg(long, exclusive = true)]
+        playlist: Option<String>,
+        /// Search for shows
+        #[arg(long, exclusive = true)]
+        show: Option<String>,
+        /// Search for episodes
+        #[arg(long, exclusive = true)]
+        episode: Option<String>,
     },
 }
