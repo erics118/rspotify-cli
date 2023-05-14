@@ -156,6 +156,7 @@ pub enum Commands {
     },
 
     /// Search anything
+    #[clap(arg_required_else_help = true)]
     Search {
         /// Search for artists
         #[arg(long, exclusive = true)]
