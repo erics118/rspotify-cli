@@ -136,7 +136,7 @@ pub enum Commands {
 
         /// Seek to a location in the current song in seconds
         #[arg(long, exclusive = true, value_name = "POSITION")]
-        seek: Option<u32>,
+        seek: Option<u8>,
 
         /// Replay the current song
         #[arg(long, exclusive = true)]

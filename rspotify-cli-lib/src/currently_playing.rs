@@ -1,134 +1,145 @@
 use anyhow::{Context, Result};
+use chrono::Duration;
 use rspotify::{
-    model::{enums::types::SearchType, search::SearchResult, TrackId},
+    model::{
+        enums::types::SearchType, search::SearchResult, CurrentlyPlayingType, PlayableItem, TrackId,
+    },
     prelude::*,
     AuthCodeSpotify,
 };
 use serde_json::json;
 
-use crate::{
-    config::Config, currently_playing_data::CurrentlyPlayingData, error::Error,
-    repeat_state::RepeatState,
-};
+use crate::{config::Config, error::Error, repeat_state::RepeatState};
 
 /// Stores current playing state
 #[derive(Debug)]
 pub struct CurrentlyPlaying {
     config: Config,
     spotify: AuthCodeSpotify,
-    pub data: Option<CurrentlyPlayingData>,
+    pub id: Option<TrackId<'static>>,
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub progress: Option<Duration>,
+    pub duration: Option<Duration>,
+    pub volume: Option<u8>,
+    pub is_playing: Option<bool>,
+    pub repeat_state: Option<RepeatState>,
+    pub is_shuffled: Option<bool>,
+    pub device: Option<String>,
+    pub playing_type: Option<CurrentlyPlayingType>,
 }
 
 impl CurrentlyPlaying {
     pub async fn new(spotify: AuthCodeSpotify, config: Config) -> Result<Self> {
-        if let Some(curr) = spotify.current_playback(None, None::<Vec<_>>).await?
-        // .context(Error::NoActiveDevice)?;
-        {
-            // TODO: might not work when playing local media
-            match curr.item.context(Error::NoActiveDevice)? {
-                rspotify::model::PlayableItem::Track(t) => Ok(Self {
+        if let Some(curr) = spotify.current_playback(None, None::<Vec<_>>).await? {
+            match curr.item.clone().context(Error::NoActiveDevice)? {
+                // TODO: might not work when playing local media
+                PlayableItem::Track(t) => Ok(Self {
                     spotify,
                     config,
-                    data: Some(CurrentlyPlayingData {
-                        id: t.id.context(Error::MissingData("song id"))?.to_string(),
-                        title: t.name,
-                        artist: t
-                            .artists
+                    id: t.id,
+                    title: Some(t.name),
+                    artist: Some(
+                        t.artists
                             .first()
                             .cloned()
                             .context(Error::MissingData("song artist"))?
                             .name,
-                        progress: curr.progress.context(Error::MissingData("song progress"))?,
-                        duration: t.duration,
-                        volume: curr
-                            .device
-                            .volume_percent
-                            .context(Error::MissingData("volume"))?
-                            .try_into()
-                            .unwrap(),
-                        is_playing: curr.is_playing,
-                        repeat_state: curr.repeat_state.into(),
-                        is_shuffled: curr.shuffle_state,
-                        device: curr.device.name,
-                        playing_type: curr.currently_playing_type,
-                    }),
+                    ),
+                    progress: curr.progress,
+                    duration: Some(t.duration),
+                    volume: curr.device.volume_percent.map(|v| v as u8),
+                    is_playing: Some(curr.is_playing),
+                    repeat_state: Some(curr.repeat_state.into()),
+                    is_shuffled: Some(curr.shuffle_state),
+                    device: Some(curr.device.name),
+                    playing_type: Some(curr.currently_playing_type),
                 }),
-                rspotify::model::PlayableItem::Episode(t) => Ok(Self {
+                PlayableItem::Episode(t) => Ok(Self {
                     spotify,
                     config,
-                    data: Some(CurrentlyPlayingData {
-                        id: t.id.to_string(),
-                        title: t.name,
-                        artist: t.show.name,
-                        progress: curr.progress.context(Error::MissingData("song progress"))?,
-                        duration: t.duration,
-                        volume: curr
-                            .device
-                            .volume_percent
-                            .context(Error::MissingData("volume"))?
-                            .try_into()
-                            .unwrap(),
-                        is_playing: curr.is_playing,
-                        repeat_state: curr.repeat_state.into(),
-                        is_shuffled: curr.shuffle_state,
-                        device: curr.device.name,
-                        playing_type: curr.currently_playing_type,
-                    }),
+                    id: None,
+                    title: Some(t.name),
+                    artist: Some(t.show.name),
+                    progress: curr.progress,
+                    duration: Some(t.duration),
+                    volume: curr.device.volume_percent.map(|v| v as u8),
+                    is_playing: Some(curr.is_playing),
+                    repeat_state: Some(curr.repeat_state.into()),
+                    is_shuffled: Some(curr.shuffle_state),
+                    device: Some(curr.device.name),
+                    playing_type: Some(curr.currently_playing_type),
                 }),
             }
         } else {
             Ok(Self {
                 spotify,
                 config,
-                data: None,
+                id: None,
+                title: None,
+                artist: None,
+                progress: None,
+                duration: None,
+                volume: None,
+                is_playing: None,
+                repeat_state: None,
+                is_shuffled: None,
+                device: None,
+                playing_type: None,
             })
         }
     }
+
     pub fn generate_url(&self) -> Result<String> {
-        Ok(TrackId::from_uri(&self.data.clone().context(Error::NoActiveDevice)?.id)?.url())
+        let id = &self.id.clone().context(Error::NoActiveDevice)?;
+        Ok(id.url())
     }
 
     pub async fn is_liked(&self) -> Result<bool> {
+        let id = self.id.clone().context(Error::NoActiveDevice)?;
         Ok(*self
             .spotify
-            .current_user_saved_tracks_contains([TrackId::from_uri(
-                &self.data.clone().context(Error::NoActiveDevice)?.id,
-            )?])
+            .current_user_saved_tracks_contains([id])
             .await?
             .first()
             .context(Error::Control("fetch like status"))?)
     }
 
     pub async fn display(&self) -> Result<String> {
-        let data = self.data.clone().context(Error::NoActiveDevice)?;
-        Ok(format!(
-            "{} - {} {}",
-            data.title,
-            data.artist,
-            if self.is_liked().await? {
-                // filled heart
-                "\u{2665}".to_owned()
+        if let Some(title) = &self.title {
+            if let Some(artist) = &self.artist {
+                Ok(format!(
+                    "{} - {} {}",
+                    title,
+                    artist,
+                    if self.is_liked().await? {
+                        // filled heart
+                        "\u{2665}".to_owned()
+                    } else {
+                        // empty heart
+                        "\u{2661}".to_owned()
+                    },
+                ))
             } else {
-                // empty heart
-                "\u{2661}".to_owned()
-            },
-        ))
+                anyhow::bail!(Error::NoActiveDevice)
+            }
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     pub async fn to_json(&self) -> Result<String> {
-        let data = self.data.clone().context(Error::NoActiveDevice)?;
-
         Ok(json!({
-            "id": data.id,
-            "title": data.title,
-            "artist": data.artist,
-            "progress": data.progress.num_seconds(),
-            "duration": data.duration.num_seconds(),
-            "is_playing": data.is_playing,
-            "repeat_state": data.repeat_state,
-            "is_shuffle": data.is_shuffled,
-            "device": data.device,
-            "playing_type": data.playing_type,
+            "id": self.id,
+            "title": self.title,
+            "artist": self.artist,
+            "progress": self.progress.context(Error::NoActiveDevice)?.num_seconds(),
+            "duration": self.duration.context(Error::NoActiveDevice)?.num_seconds(),
+            "is_playing": self.is_playing,
+            "repeat_state": self.repeat_state,
+            "is_shuffle": self.is_shuffled,
+            "device": self.device,
+            "playing_type": self.playing_type,
             "is_liked": self.is_liked().await?,
         })
         .to_string())
@@ -149,7 +160,7 @@ impl CurrentlyPlaying {
     }
 
     pub async fn toggle_play_pause(&self) -> Result<()> {
-        if self.data.clone().context(Error::NoActiveDevice)?.is_playing {
+        if Some(true) == self.is_playing {
             self.pause().await
         } else {
             self.play().await
@@ -157,19 +168,17 @@ impl CurrentlyPlaying {
     }
 
     pub async fn like(&self) -> Result<()> {
+        let id = self.id.clone().context(Error::NoActiveDevice)?;
         self.spotify
-            .current_user_saved_tracks_add([TrackId::from_uri(
-                &self.data.clone().context(Error::NoActiveDevice)?.id,
-            )?])
+            .current_user_saved_tracks_add([id])
             .await
             .context(Error::Control("like song"))
     }
 
     pub async fn unlike(&self) -> Result<()> {
+        let id = self.id.clone().context(Error::NoActiveDevice)?;
         self.spotify
-            .current_user_saved_tracks_delete([TrackId::from_uri(
-                &self.data.clone().context(Error::NoActiveDevice)?.id,
-            )?])
+            .current_user_saved_tracks_delete([id])
             .await
             .context(Error::Control("unlike song"))
     }
@@ -204,49 +213,47 @@ impl CurrentlyPlaying {
     }
 
     pub async fn cycle_repeat(&self) -> Result<()> {
-        self.spotify
-            .repeat(
-                self.data
-                    .clone()
-                    .context(Error::NoActiveDevice)?
-                    .repeat_state
-                    .cycle()
-                    .into(),
-                None,
-            )
-            .await
-            .context(Error::Control("cycle repeat state"))
+        if let Some(repeat_state) = self.repeat_state {
+            self.spotify
+                .repeat(repeat_state.cycle().into(), None)
+                .await
+                .context(Error::Control("cycle repeat state"))
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     pub async fn set_volume(&self, volume: u8) -> Result<()> {
-        self.spotify
-            .volume(volume.clamp(0, 100), None)
-            .await
-            .context(Error::Control("set volume"))
+        if self.volume.is_some() {
+            self.spotify
+                .volume(volume.clamp(0, 100), None)
+                .await
+                .context(Error::Control("set volume"))
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     pub async fn volume_up(&self) -> Result<()> {
-        self.spotify
-            .volume(
-                (self.data.clone().context(Error::NoActiveDevice)?.volume
-                    + self.config.volume_increment)
-                    .clamp(0, 100),
-                None,
-            )
-            .await
-            .context(Error::Control("volume up"))
+        if let Some(volume) = self.volume {
+            self.spotify
+                .volume((volume + self.config.volume_increment).clamp(0, 100), None)
+                .await
+                .context(Error::Control("volume up"))
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     pub async fn volume_down(&self) -> Result<()> {
-        self.spotify
-            .volume(
-                (self.data.clone().context(Error::NoActiveDevice)?.volume
-                    - self.config.volume_increment)
-                    .clamp(0, 100),
-                None,
-            )
-            .await
-            .context(Error::Control("volume down"))
+        if let Some(volume) = self.volume {
+            self.spotify
+                .volume((volume - self.config.volume_increment).clamp(0, 100), None)
+                .await
+                .context(Error::Control("volume down"))
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     pub async fn shuffle(&self, state: bool) -> Result<()> {
@@ -257,17 +264,14 @@ impl CurrentlyPlaying {
     }
 
     pub async fn toggle_shuffle(&self) -> Result<()> {
-        self.shuffle(
-            !self
-                .data
-                .clone()
-                .context(Error::NoActiveDevice)?
-                .is_shuffled,
-        )
-        .await
+        if let Some(is_shuffled) = self.is_shuffled {
+            self.shuffle(!is_shuffled).await
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
-    pub async fn seek(&self, position: u32) -> Result<()> {
+    pub async fn seek(&self, position: u8) -> Result<()> {
         self.spotify
             .seek_track(chrono::Duration::seconds(position.into()), None)
             .await
@@ -301,9 +305,7 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search for artist"))
         {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
+            Ok(serde_json::to_string(&page.items)?)
         } else {
             Ok("No artists found".to_string())
         }
@@ -316,9 +318,7 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search for album"))
         {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
+            Ok(serde_json::to_string(&page.items)?)
         } else {
             Ok("No artists found".to_string())
         }
@@ -331,9 +331,7 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search for track"))
         {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
+            Ok(serde_json::to_string(&page.items)?)
         } else {
             Ok("No artists found".to_string())
         }
@@ -346,9 +344,7 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search for playlist"))
         {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
+            Ok(serde_json::to_string(&page.items)?)
         } else {
             Ok("No artists found".to_string())
         }
@@ -361,9 +357,7 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search for show"))
         {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
+            Ok(serde_json::to_string(&page.items)?)
         } else {
             Ok("No artists found".to_string())
         }

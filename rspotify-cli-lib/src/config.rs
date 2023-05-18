@@ -58,7 +58,7 @@ pub fn load_config() -> Result<Config> {
 
     let config = config::Config::builder()
         .set_default("redirect_uri", "http://localhost:8000/callback")?
-        .set_default("volume_increment", 10u8)?
+        .set_default("volume_increment", 10)?
         .add_source(config::File::from(config_file.clone()))
         .add_source(config::Environment::with_prefix("SPOTIFY"))
         .build()?

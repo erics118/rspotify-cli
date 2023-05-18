@@ -10,42 +10,47 @@
 #![warn(clippy::all, clippy::pedantic, clippy::nursery)]
 
 mod cli;
+mod pretty_duration;
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use rspotify_cli_lib::{
     config::load_config, currently_playing::CurrentlyPlaying, error::Error,
-    init_spotify::init_spotify, pretty_duration::PrettyDuration,
+    init_spotify::init_spotify,
 };
 
-use crate::cli::{Cli, Commands};
+use crate::{
+    cli::{Cli, Commands},
+    pretty_duration::PrettyDuration,
+};
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
     let config = load_config()?;
 
-    let spotify = init_spotify(config.clone()).await?;
+    let spotify = init_spotify(&config).await?;
+
     let Ok(curr) = CurrentlyPlaying::new(spotify, config).await else {
-        anyhow::bail!("No music playing");
+        anyhow::bail!(Error::NoActiveDevice);
     };
 
     // disable formatting to have everything neatly on one line
     #[rustfmt::skip]
     match cli.command {
         // status
-        // TODO: remove so many clones
         Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
-        Commands::Status { id: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.id),
+        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::NoActiveDevice)?.to_string()),
         Commands::Status { url: true, .. } => println!("{}", curr.generate_url()?),
-        Commands::Status { title: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.title),
-        Commands::Status { artist: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.artist),
-        Commands::Status { progress: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.progress.pretty()),
-        Commands::Status { duration: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.duration.pretty()),
-        Commands::Status { is_playing: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.is_playing),
-        Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.data.clone().context(Error::NoActiveDevice)?.repeat_state),
-        Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.data.clone().context(Error::NoActiveDevice)?.is_shuffled),
-        Commands::Status { device: true, .. } => println!("{}", curr.data.clone().context(Error::NoActiveDevice)?.device),
-        Commands::Status { playing_type: true, .. } => println!("{:?}", curr.data.clone().context(Error::NoActiveDevice)?.playing_type),
+        Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::NoActiveDevice)?),
+        Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::NoActiveDevice)?),
+        Commands::Status { progress: true, .. } => println!("{}", curr.progress.context(Error::NoActiveDevice)?.pretty()),
+        Commands::Status { duration: true, .. } => println!("{}", curr.duration.context(Error::NoActiveDevice)?.pretty()),
+        Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing.context(Error::NoActiveDevice)?),
+        Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state.context(Error::NoActiveDevice)?),
+        Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.is_shuffled.context(Error::NoActiveDevice)?),
+        Commands::Status { device: true, .. } => println!("{}", curr.device.context(Error::NoActiveDevice)?),
+        Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type.context(Error::NoActiveDevice)?),
         Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
         Commands::Status { .. } => println!("{}", curr.display().await?),
 
@@ -67,11 +72,9 @@ async fn main() -> Result<()> {
         Commands::Control { toggle_shuffle: true, .. } => curr.toggle_shuffle().await?,
         Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
         Commands::Control { replay: true, .. } => curr.replay().await?,
-        Commands::Control { .. } => unimplemented!(),
 
         Commands::PlayFrom { url: Some(_url), .. } => todo!(),
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
-        Commands::PlayFrom { .. } => unimplemented!(),
 
         Commands::Search { artist: Some(artist), .. } => println!("{}", curr.search_for_artist(artist).await?),
         Commands::Search { album: Some(album), .. } => println!("{}", curr.search_for_album(album).await?),
@@ -79,7 +82,6 @@ async fn main() -> Result<()> {
         Commands::Search { playlist: Some(playlist), .. } => println!("{}", curr.search_for_playlist(playlist).await?),
         Commands::Search { show: Some(show), .. } =>println!("{}",  curr.search_for_show(show).await?),
         Commands::Search { episode: Some(episode), .. } => println!("{}", curr.search_for_episode(episode).await?),
-        Commands::Search { .. } => unimplemented!(),
 
         #[allow(unreachable_patterns)]
         _ => unimplemented!(),

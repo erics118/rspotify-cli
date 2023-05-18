@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Initialize Spotify client object
-pub async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
+pub async fn init_spotify(config: &Config) -> Result<AuthCodeSpotify> {
     let rspotify_config = RSpotifyConfig {
         token_cached: true,
         cache_path: get_config_path(ConfigFile::Token).context(Error::Config)?,
@@ -37,7 +37,7 @@ pub async fn init_spotify(config: Config) -> Result<AuthCodeSpotify> {
             "user-read-email",
             "user-read-private"
         ),
-        redirect_uri: config.redirect_uri,
+        redirect_uri: config.redirect_uri.clone(),
         ..Default::default()
     };
 

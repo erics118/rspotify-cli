@@ -2,7 +2,7 @@ use rspotify::model::RepeatState as RSpotifyRepeatState;
 use serde::{Deserialize, Serialize};
 
 // Allows for cycling between states and serialization
-#[derive(Debug, Serialize, Deserialize, clap::ValueEnum, Clone)]
+#[derive(Debug, Serialize, Deserialize, clap::ValueEnum, Copy, Clone)]
 pub enum RepeatState {
     Off,
     Context,

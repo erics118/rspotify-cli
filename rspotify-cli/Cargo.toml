@@ -16,3 +16,4 @@ rspotify-cli-lib = { path = "../rspotify-cli-lib" }
 anyhow = "1.0.71"
 clap = { version = "4.2.7", features = ["derive", "cargo", "env"] }
 tokio = { version = "1.28.1", features = ["full"] }
+chrono = "0.4.24"
