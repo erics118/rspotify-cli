@@ -1,3 +1,5 @@
+#![warn(clippy::all, clippy::nursery, clippy::cargo)]
+
 pub mod config;
 pub mod currently_playing;
 pub mod error;

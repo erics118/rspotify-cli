@@ -90,6 +90,8 @@ impl CurrentlyPlaying {
         }
     }
 
+    // status
+
     pub fn generate_url(&self) -> Result<String> {
         let id = &self.id.clone().context(Error::NoActiveDevice)?;
         Ok(id.url())
@@ -144,6 +146,8 @@ impl CurrentlyPlaying {
         })
         .to_string())
     }
+
+    // control
 
     pub async fn play(&self) -> Result<()> {
         self.spotify
@@ -282,6 +286,8 @@ impl CurrentlyPlaying {
         self.seek(0).await
     }
 
+    // play from
+
     pub async fn play_from_uri(&self, uri: String) -> Result<()> {
         self.spotify
             .start_uris_playback(
@@ -297,6 +303,8 @@ impl CurrentlyPlaying {
     pub async fn play_from_url(&self, _url: String) -> Result<()> {
         todo!()
     }
+
+    // search
 
     pub async fn search_for_artist(&self, artist: String) -> Result<String> {
         if let Ok(SearchResult::Artists(page)) = self

@@ -1,13 +1,4 @@
-#![warn(
-    explicit_outlives_requirements,
-    elided_lifetimes_in_paths,
-    let_underscore_drop,
-    missing_debug_implementations,
-    noop_method_call,
-    unsafe_code,
-    unused_qualifications
-)]
-#![warn(clippy::all, clippy::pedantic, clippy::nursery)]
+#![warn(clippy::all, clippy::nursery, clippy::cargo)]
 
 mod cli;
 mod pretty_duration;
