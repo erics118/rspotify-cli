@@ -6,7 +6,9 @@ mod pretty_duration;
 use anyhow::{Context, Result};
 use clap::Parser;
 use rspotify_cli_lib::{
-    config::load_config, currently_playing::CurrentlyPlaying, error::Error,
+    config::load_config,
+    currently_playing::{CurrentlyPlaying, SearchType},
+    error::Error,
     init_spotify::init_spotify,
 };
 
@@ -67,12 +69,12 @@ async fn main() -> Result<()> {
         Commands::PlayFrom { url: Some(_url), .. } => todo!(),
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
 
-        Commands::Search { artist: Some(artist), .. } => println!("{}", curr.search_for_artist(artist).await?),
-        Commands::Search { album: Some(album), .. } => println!("{}", curr.search_for_album(album).await?),
-        Commands::Search { track: Some(track), .. } => println!("{}", curr.search_for_track(track).await?),
-        Commands::Search { playlist: Some(playlist), .. } => println!("{}", curr.search_for_playlist(playlist).await?),
-        Commands::Search { show: Some(show), .. } =>println!("{}",  curr.search_for_show(show).await?),
-        Commands::Search { episode: Some(episode), .. } => println!("{}", curr.search_for_episode(episode).await?),
+        Commands::Search { artist: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Artist, limit, offset).await?),
+        Commands::Search { album: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Album, limit, offset).await?),
+        Commands::Search { track: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Track, limit, offset).await?),
+        Commands::Search { playlist: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Playlist, limit, offset).await?),
+        Commands::Search { show: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Show, limit, offset).await?),
+        Commands::Search { episode: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Episode, limit, offset).await?),
 
         #[allow(unreachable_patterns)]
         _ => unimplemented!(),

@@ -1,9 +1,8 @@
 use anyhow::{Context, Result};
 use chrono::Duration;
+pub use rspotify::model::enums::types::SearchType;
 use rspotify::{
-    model::{
-        enums::types::SearchType, search::SearchResult, CurrentlyPlayingType, PlayableItem, TrackId,
-    },
+    model::{search::SearchResult, CurrentlyPlayingType, PlayableItem, TrackId},
     prelude::*,
     AuthCodeSpotify,
 };
@@ -306,83 +305,26 @@ impl CurrentlyPlaying {
 
     // search
 
-    pub async fn search_for_artist(&self, artist: String) -> Result<String> {
-        if let Ok(SearchResult::Artists(page)) = self
+    pub async fn search(
+        &self,
+        what: String,
+        kind: SearchType,
+        limit: u32,
+        offset: u32,
+    ) -> Result<String> {
+        match self
             .spotify
-            .search(&artist, SearchType::Artist, None, None, Some(3), None)
+            .search(&what, kind, None, None, Some(limit), Some(offset))
             .await
-            .context(Error::Control("search for artist"))
+            .context(Error::Control("search for artist"))?
         {
-            Ok(serde_json::to_string(&page.items)?)
-        } else {
-            Ok("No artists found".to_string())
-        }
-    }
-
-    pub async fn search_for_album(&self, album: String) -> Result<String> {
-        if let Ok(SearchResult::Albums(page)) = self
-            .spotify
-            .search(&album, SearchType::Album, None, None, Some(3), None)
-            .await
-            .context(Error::Control("search for album"))
-        {
-            Ok(serde_json::to_string(&page.items)?)
-        } else {
-            Ok("No artists found".to_string())
-        }
-    }
-
-    pub async fn search_for_track(&self, track: String) -> Result<String> {
-        if let Ok(SearchResult::Tracks(page)) = self
-            .spotify
-            .search(&track, SearchType::Track, None, None, Some(3), None)
-            .await
-            .context(Error::Control("search for track"))
-        {
-            Ok(serde_json::to_string(&page.items)?)
-        } else {
-            Ok("No artists found".to_string())
-        }
-    }
-
-    pub async fn search_for_playlist(&self, playlist: String) -> Result<String> {
-        if let Ok(SearchResult::Playlists(page)) = self
-            .spotify
-            .search(&playlist, SearchType::Playlist, None, None, Some(3), None)
-            .await
-            .context(Error::Control("search for playlist"))
-        {
-            Ok(serde_json::to_string(&page.items)?)
-        } else {
-            Ok("No artists found".to_string())
-        }
-    }
-
-    pub async fn search_for_show(&self, show: String) -> Result<String> {
-        if let Ok(SearchResult::Shows(page)) = self
-            .spotify
-            .search(&show, SearchType::Show, None, None, Some(3), None)
-            .await
-            .context(Error::Control("search for show"))
-        {
-            Ok(serde_json::to_string(&page.items)?)
-        } else {
-            Ok("No artists found".to_string())
-        }
-    }
-
-    pub async fn search_for_episode(&self, episode: String) -> Result<String> {
-        if let Ok(SearchResult::Episodes(page)) = self
-            .spotify
-            .search(&episode, SearchType::Episode, None, None, Some(3), None)
-            .await
-            .context(Error::Control("search for episode"))
-        {
-            serde_json::to_string(&page.items)
-                .ok()
-                .context("failed to serialize search results")
-        } else {
-            Ok("No artists found".to_string())
+            // yes these lines are necessary
+            SearchResult::Artists(page) => Ok(serde_json::to_string(&page.items)?),
+            SearchResult::Shows(page) => Ok(serde_json::to_string(&page.items)?),
+            SearchResult::Albums(page) => Ok(serde_json::to_string(&page.items)?),
+            SearchResult::Tracks(page) => Ok(serde_json::to_string(&page.items)?),
+            SearchResult::Episodes(page) => Ok(serde_json::to_string(&page.items)?),
+            SearchResult::Playlists(page) => Ok(serde_json::to_string(&page.items)?),
         }
     }
 }

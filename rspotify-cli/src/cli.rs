@@ -17,6 +17,7 @@ pub struct Cli {
 pub enum Commands {
     /// Print the current status.
     /// The API quickly forgets the song if it hasn't been playing for a while
+    #[command()]
     Status {
         /// Print the full status in json to be used for external parsing
         #[arg(long, exclusive = true)]
@@ -72,7 +73,7 @@ pub enum Commands {
     },
 
     /// Control the current playback
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Control {
         /// Play the song if it was previously paused
         #[arg(long, exclusive = true)]
@@ -144,7 +145,7 @@ pub enum Commands {
     },
 
     /// Play songs
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     PlayFrom {
         /// Play a URL
         #[arg(long, exclusive = true)]
@@ -157,28 +158,36 @@ pub enum Commands {
 
     // TODO: add pagination and limit per page options
     /// Search anything
-    #[clap(arg_required_else_help = true)]
+    #[command(arg_required_else_help = true)]
     Search {
         /// Search for artists
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         artist: Option<String>,
 
         /// Search for albums
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         album: Option<String>,
 
         /// Search for tracks
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         track: Option<String>,
 
         /// Search for playlists
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         playlist: Option<String>,
+
         /// Search for shows
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         show: Option<String>,
+
         /// Search for episodes
-        #[arg(long, exclusive = true)]
+        #[arg(long, group = "aa")]
         episode: Option<String>,
+
+        #[arg(long, default_value_t = 5)]
+        limit: u32,
+
+        #[arg(long, default_value_t = 1)]
+        offset: u32,
     },
 }
