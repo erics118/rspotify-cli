@@ -1,4 +1,3 @@
-use rspotify::ClientError;
 use thiserror::Error;
 
 /// Error states for the CLI
@@ -14,10 +13,4 @@ pub enum Error<'a> {
     MissingData(&'a str),
     #[error("Unable to control song playback: {0}")]
     Control(&'a str),
-}
-
-impl From<ClientError> for Error<'_> {
-    fn from(_: ClientError) -> Self {
-        Self::NoActiveDevice
-    }
 }
