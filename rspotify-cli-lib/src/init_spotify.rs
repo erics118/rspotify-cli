@@ -1,16 +1,20 @@
+use std::path::PathBuf;
+
 use anyhow::{Context, Result};
 use rspotify::{prelude::*, scopes, AuthCodeSpotify, Config as RSpotifyConfig, Credentials, OAuth};
 
-use crate::{
-    config::{get_config_path, Config, ConfigFile},
-    error::Error,
-};
+use crate::error::Error;
 
 /// Initialize Spotify client object
-pub async fn init_spotify(config: &Config) -> Result<AuthCodeSpotify> {
+pub async fn init_spotify(
+    cache_path: PathBuf,
+    client_id: String,
+    client_secret: String,
+    redirect_uri: String,
+) -> Result<AuthCodeSpotify> {
     let rspotify_config = RSpotifyConfig {
         token_cached: true,
-        cache_path: get_config_path(ConfigFile::Token).context(Error::Config)?,
+        cache_path,
         ..Default::default()
     };
 
@@ -37,11 +41,11 @@ pub async fn init_spotify(config: &Config) -> Result<AuthCodeSpotify> {
             "user-read-email",
             "user-read-private"
         ),
-        redirect_uri: config.redirect_uri.clone(),
+        redirect_uri,
         ..Default::default()
     };
 
-    let creds = Credentials::new(&config.client_id, &config.client_secret);
+    let creds = Credentials::new(&client_id, &client_secret);
 
     let spotify = AuthCodeSpotify::with_config(creds, oauth, rspotify_config);
 

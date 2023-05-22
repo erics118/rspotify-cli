@@ -14,6 +14,10 @@ publish = false
 [dependencies]
 rspotify-cli-lib = { path = "../rspotify-cli-lib" }
 anyhow = "1.0.71"
-clap = { version = "4.2.7", features = ["derive", "cargo", "env"] }
-tokio = { version = "1.28.1", features = ["full"] }
 chrono = "0.4.24"
+clap = { version = "4.3.0", features = ["derive", "cargo", "env"] }
+config = { version = "0.13.3", features = ["toml"] }
+dirs = "5.0.1"
+thiserror = "1.0.40"
+tokio = { version = "1.28.1", features = ["full"] }
+serde = { version = "1.0.163", features = ["derive"] }

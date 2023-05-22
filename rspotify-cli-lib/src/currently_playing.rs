@@ -8,12 +8,11 @@ use rspotify::{
 };
 use serde_json::json;
 
-use crate::{config::Config, error::Error, repeat_state::RepeatState};
+use crate::{error::Error, repeat_state::RepeatState};
 
 /// Stores current playing state
 #[derive(Debug)]
 pub struct CurrentlyPlaying {
-    config: Config,
     spotify: AuthCodeSpotify,
     pub id: Option<TrackId<'static>>,
     pub title: Option<String>,
@@ -29,13 +28,12 @@ pub struct CurrentlyPlaying {
 }
 
 impl CurrentlyPlaying {
-    pub async fn new(spotify: AuthCodeSpotify, config: Config) -> Result<Self> {
+    pub async fn new(spotify: AuthCodeSpotify) -> Result<Self> {
         if let Some(curr) = spotify.current_playback(None, None::<Vec<_>>).await? {
             match curr.item.clone().context(Error::NoActiveDevice)? {
                 // TODO: might not work when playing local media
                 PlayableItem::Track(t) => Ok(Self {
                     spotify,
-                    config,
                     id: t.id,
                     title: Some(t.name),
                     artist: Some(
@@ -56,7 +54,6 @@ impl CurrentlyPlaying {
                 }),
                 PlayableItem::Episode(t) => Ok(Self {
                     spotify,
-                    config,
                     id: None,
                     title: Some(t.name),
                     artist: Some(t.show.name),
@@ -73,7 +70,6 @@ impl CurrentlyPlaying {
         } else {
             Ok(Self {
                 spotify,
-                config,
                 id: None,
                 title: None,
                 artist: None,
@@ -237,10 +233,10 @@ impl CurrentlyPlaying {
         }
     }
 
-    pub async fn volume_up(&self) -> Result<()> {
+    pub async fn volume_up(&self, incr: u8) -> Result<()> {
         if let Some(volume) = self.volume {
             self.spotify
-                .volume((volume + self.config.volume_increment).clamp(0, 100), None)
+                .volume((volume + incr).clamp(0, 100), None)
                 .await
                 .context(Error::Control("volume up"))
         } else {
@@ -248,10 +244,10 @@ impl CurrentlyPlaying {
         }
     }
 
-    pub async fn volume_down(&self) -> Result<()> {
+    pub async fn volume_down(&self, incr: u8) -> Result<()> {
         if let Some(volume) = self.volume {
             self.spotify
-                .volume((volume - self.config.volume_increment).clamp(0, 100), None)
+                .volume((volume - incr).clamp(0, 100), None)
                 .await
                 .context(Error::Control("volume down"))
         } else {
@@ -316,7 +312,7 @@ impl CurrentlyPlaying {
             .spotify
             .search(&what, kind, None, None, Some(limit), Some(offset))
             .await
-            .context(Error::Control("search for artist"))?
+            .context(Error::Control("search"))?
         {
             // yes these lines are necessary
             SearchResult::Artists(page) => Ok(serde_json::to_string(&page.items)?),

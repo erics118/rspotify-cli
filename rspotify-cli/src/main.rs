@@ -1,31 +1,44 @@
 #![warn(clippy::all, clippy::nursery, clippy::cargo)]
 
 mod cli;
+mod config;
+mod error;
 mod pretty_duration;
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use rspotify_cli_lib::{
-    config::load_config,
     currently_playing::{CurrentlyPlaying, SearchType},
-    error::Error,
     init_spotify::init_spotify,
 };
 
 use crate::{
     cli::{Cli, Commands},
+    config::{get_config_path, load_config, Config, ConfigFile},
+    error::Error,
     pretty_duration::PrettyDuration,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let config = load_config()?;
+    let Config {
+        client_id,
+        client_secret,
+        redirect_uri,
+        volume_increment,
+    } = load_config()?;
 
-    let spotify = init_spotify(&config).await?;
+    let spotify = init_spotify(
+        get_config_path(ConfigFile::Token).context(Error::Config)?,
+        client_id,
+        client_secret,
+        redirect_uri,
+    )
+    .await?;
 
-    let Ok(curr) = CurrentlyPlaying::new(spotify, config).await else {
-        anyhow::bail!(Error::NoActiveDevice);
+    let Ok(curr) = CurrentlyPlaying::new(spotify).await else {
+        anyhow::bail!(Error::Connect);
     };
 
     // disable formatting to have everything neatly on one line
@@ -33,17 +46,17 @@ async fn main() -> Result<()> {
     match cli.command {
         // status
         Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
-        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::NoActiveDevice)?.to_string()),
+        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::MissingMetadata)?.to_string()),
         Commands::Status { url: true, .. } => println!("{}", curr.generate_url()?),
-        Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::NoActiveDevice)?),
-        Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::NoActiveDevice)?),
-        Commands::Status { progress: true, .. } => println!("{}", curr.progress.context(Error::NoActiveDevice)?.pretty()),
-        Commands::Status { duration: true, .. } => println!("{}", curr.duration.context(Error::NoActiveDevice)?.pretty()),
-        Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing.context(Error::NoActiveDevice)?),
-        Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state.context(Error::NoActiveDevice)?),
-        Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.is_shuffled.context(Error::NoActiveDevice)?),
-        Commands::Status { device: true, .. } => println!("{}", curr.device.context(Error::NoActiveDevice)?),
-        Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type.context(Error::NoActiveDevice)?),
+        Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::MissingMetadata)?),
+        Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::MissingMetadata)?),
+        Commands::Status { progress: true, .. } => println!("{}", curr.progress.context(Error::MissingMetadata)?.pretty()),
+        Commands::Status { duration: true, .. } => println!("{}", curr.duration.context(Error::MissingMetadata)?.pretty()),
+        Commands::Status { is_playing: true, .. } => println!("{}", curr.is_playing.context(Error::MissingMetadata)?),
+        Commands::Status { repeat_state: true, .. } => println!("{:?}", curr.repeat_state.context(Error::MissingMetadata)?),
+        Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.is_shuffled.context(Error::MissingMetadata)?),
+        Commands::Status { device: true, .. } => println!("{}", curr.device.context(Error::MissingMetadata)?),
+        Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type.context(Error::MissingMetadata)?),
         Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
         Commands::Status { .. } => println!("{}", curr.display().await?),
 
@@ -59,8 +72,8 @@ async fn main() -> Result<()> {
         Commands::Control { repeat: Some(repeat), .. } => curr.repeat(repeat).await?,
         Commands::Control { cycle_repeat: true, .. } => curr.cycle_repeat().await?,
         Commands::Control { volume: Some(volume), .. } => curr.set_volume(volume).await?,
-        Commands::Control { volume_up: true, .. } => curr.volume_up().await?,
-        Commands::Control { volume_down: true, .. } => curr.volume_down().await?,
+        Commands::Control { volume_up: true, .. } => curr.volume_up(volume_increment).await?,
+        Commands::Control { volume_down: true, .. } => curr.volume_down(volume_increment).await?,
         Commands::Control { shuffle: Some(shuffle), .. } => curr.shuffle(shuffle).await?,
         Commands::Control { toggle_shuffle: true, .. } => curr.toggle_shuffle().await?,
         Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
