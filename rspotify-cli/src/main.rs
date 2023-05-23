@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
     match cli.command {
         // status
         Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
-        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::MissingMetadata)?.to_string()),
+        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::MissingMetadata)?),
         Commands::Status { url: true, .. } => println!("{}", curr.generate_url()?),
         Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::MissingMetadata)?),
         Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::MissingMetadata)?),
