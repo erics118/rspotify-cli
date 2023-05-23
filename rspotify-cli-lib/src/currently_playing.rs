@@ -36,13 +36,7 @@ impl CurrentlyPlaying {
                     spotify,
                     id: t.id,
                     title: Some(t.name),
-                    artist: Some(
-                        t.artists
-                            .first()
-                            .cloned()
-                            .context(Error::MissingData("song artist"))?
-                            .name,
-                    ),
+                    artist: t.artists.first().cloned().map(|a| a.name),
                     progress: curr.progress,
                     duration: Some(t.duration),
                     volume: curr.device.volume_percent.map(|v| v as u8),

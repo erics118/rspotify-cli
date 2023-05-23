@@ -9,8 +9,6 @@ pub enum Error<'a> {
     AuthorizationURI,
     #[error("No active device found")]
     NoActiveDevice,
-    #[error("Missing data in the track metadata: {0}")]
-    MissingData(&'a str),
     #[error("Unable to control song playback: {0}")]
     Control(&'a str),
 }
