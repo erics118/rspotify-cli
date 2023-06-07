@@ -1,6 +1,9 @@
+//! Errors for the CLI.
+
 use thiserror::Error;
 
-/// Error states for the CLI
+/// Error states for the CLI.
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Could not connect to spotify")]

@@ -1,8 +1,10 @@
+//! Currently playing struct that handles all connections to the Spotify API.
+
 use anyhow::{Context, Result};
 use chrono::Duration;
 pub use rspotify::model::enums::types::SearchType;
 use rspotify::{
-    model::{search::SearchResult, CurrentlyPlayingType, PlayableItem, TrackId},
+    model::{CurrentlyPlayingType, PlayableItem, SearchResult, TrackId},
     prelude::*,
     AuthCodeSpotify,
 };
@@ -13,21 +15,51 @@ use crate::{error::Error, repeat_state::RepeatState};
 /// Stores current playing state
 #[derive(Debug)]
 pub struct CurrentlyPlaying {
+    /// Connector that fetches all the data.
     spotify: AuthCodeSpotify,
+
+    /// Track id. Optional because it can be a local file.
     pub id: Option<TrackId<'static>>,
+
+    /// Track title.
     pub title: Option<String>,
+
+    /// Track artist.
     pub artist: Option<String>,
+
+    /// How much of the track has been played.
     pub progress: Option<Duration>,
+
+    /// Total length of the track.
     pub duration: Option<Duration>,
+
+    /// Volume of the active device.
     pub volume: Option<u8>,
+
+    /// Whether the track is playing or not.
     pub is_playing: Option<bool>,
+
+    /// Whether the track is repeated or not.
     pub repeat_state: Option<RepeatState>,
+
+    /// Whether the track is shuffled or not.
     pub is_shuffled: Option<bool>,
+
+    /// Name of the active device.
     pub device: Option<String>,
+
+    /// Type of the active device.
     pub playing_type: Option<CurrentlyPlayingType>,
 }
 
 impl CurrentlyPlaying {
+    /// Attempt to create a new instance of `CurrentlyPlaying`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the current playback is not available. This is
+    /// likely because there is no active device. Within a few seconds of
+    /// pausing, the active device becomes inactive and unknown to the API.
     pub async fn new(spotify: AuthCodeSpotify) -> Result<Self> {
         if let Some(curr) = spotify.current_playback(None, None::<Vec<_>>).await? {
             match curr.item.clone().context(Error::NoActiveDevice)? {
@@ -79,13 +111,13 @@ impl CurrentlyPlaying {
         }
     }
 
-    // status
-
+    /// Returns the URL of the current track.
     pub fn generate_url(&self) -> Result<String> {
         let id = &self.id.clone().context(Error::NoActiveDevice)?;
         Ok(id.url())
     }
 
+    /// Whether the current song is liked or not
     pub async fn is_liked(&self) -> Result<bool> {
         let id = self.id.clone().context(Error::NoActiveDevice)?;
         Ok(*self
@@ -93,9 +125,10 @@ impl CurrentlyPlaying {
             .current_user_saved_tracks_contains([id])
             .await?
             .first()
-            .context(Error::Control("fetch like status"))?)
+            .context(Error::Control("fetch like status".to_owned()))?)
     }
 
+    /// Returns the current track's title, artist, and liked status.
     pub async fn display(&self) -> Result<String> {
         if let Some(title) = &self.title {
             if let Some(artist) = &self.artist {
@@ -119,6 +152,7 @@ impl CurrentlyPlaying {
         }
     }
 
+    /// Return the metadata of the current track as JSON.
     pub async fn to_json(&self) -> Result<String> {
         Ok(json!({
             "id": self.id,
@@ -136,22 +170,23 @@ impl CurrentlyPlaying {
         .to_string())
     }
 
-    // control
-
+    /// Play the track.
     pub async fn play(&self) -> Result<()> {
         self.spotify
             .resume_playback(None, None)
             .await
-            .context(Error::Control("play song"))
+            .context(Error::Control("play song".to_owned()))
     }
 
+    /// Pause the track.
     pub async fn pause(&self) -> Result<()> {
         self.spotify
             .pause_playback(None)
             .await
-            .context(Error::Control("pause song"))
+            .context(Error::Control("pause song".to_owned()))
     }
 
+    /// Toggle play/pause.
     pub async fn toggle_play_pause(&self) -> Result<()> {
         if Some(true) == self.is_playing {
             self.pause().await
@@ -160,22 +195,25 @@ impl CurrentlyPlaying {
         }
     }
 
+    /// Like the track.
     pub async fn like(&self) -> Result<()> {
         let id = self.id.clone().context(Error::NoActiveDevice)?;
         self.spotify
             .current_user_saved_tracks_add([id])
             .await
-            .context(Error::Control("like song"))
+            .context(Error::Control("like song".to_owned()))
     }
 
+    /// Remove like from the song.
     pub async fn unlike(&self) -> Result<()> {
         let id = self.id.clone().context(Error::NoActiveDevice)?;
         self.spotify
             .current_user_saved_tracks_delete([id])
             .await
-            .context(Error::Control("unlike song"))
+            .context(Error::Control("unlike song".to_owned()))
     }
 
+    /// Toggle like/unlike.
     pub async fn toggle_like_unlike(&self) -> Result<()> {
         if self.is_liked().await? {
             self.unlike().await
@@ -184,78 +222,87 @@ impl CurrentlyPlaying {
         }
     }
 
+    /// Go to the previous track
     pub async fn previous(&self) -> Result<()> {
         self.spotify
             .previous_track(None)
             .await
-            .context(Error::Control("go to previous song"))
+            .context(Error::Control("go to previous song".to_owned()))
     }
 
+    /// Go to the next track
     pub async fn next(&self) -> Result<()> {
         self.spotify
             .next_track(None)
             .await
-            .context(Error::Control("go to next song"))
+            .context(Error::Control("go to next song".to_owned()))
     }
 
+    /// Set the repeat state.
     pub async fn repeat(&self, repeat_state: RepeatState) -> Result<()> {
         self.spotify
             .repeat(repeat_state.into(), None)
             .await
-            .context(Error::Control("set repeat state"))
+            .context(Error::Control("set repeat state".to_owned()))
     }
 
+    /// Cycle between the three repeat states
     pub async fn cycle_repeat(&self) -> Result<()> {
         if let Some(repeat_state) = self.repeat_state {
             self.spotify
                 .repeat(repeat_state.cycle().into(), None)
                 .await
-                .context(Error::Control("cycle repeat state"))
+                .context(Error::Control("cycle repeat state".to_owned()))
         } else {
             anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
+    /// Set the volume
     pub async fn set_volume(&self, volume: u8) -> Result<()> {
         if self.volume.is_some() {
             self.spotify
                 .volume(volume.clamp(0, 100), None)
                 .await
-                .context(Error::Control("set volume"))
+                .context(Error::Control("set volume".to_owned()))
         } else {
             anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
+    /// Increase the volume by a certain amount.
     pub async fn volume_up(&self, incr: u8) -> Result<()> {
         if let Some(volume) = self.volume {
             self.spotify
                 .volume((volume + incr).clamp(0, 100), None)
                 .await
-                .context(Error::Control("volume up"))
+                .context(Error::Control("volume up".to_owned()))
         } else {
             anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
+    /// Decrease the volume by a certain amount.
     pub async fn volume_down(&self, incr: u8) -> Result<()> {
         if let Some(volume) = self.volume {
             self.spotify
                 .volume((volume - incr).clamp(0, 100), None)
                 .await
-                .context(Error::Control("volume down"))
+                .context(Error::Control("volume down".to_owned()))
         } else {
             anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
+    /// Set the shuffle state.
     pub async fn shuffle(&self, state: bool) -> Result<()> {
         self.spotify
             .shuffle(state, None)
             .await
-            .context(Error::Control("set shuffle state"))
+            .context(Error::Control("set shuffle state".to_owned()))
     }
 
+    /// Toggle shuffle state.
     pub async fn toggle_shuffle(&self) -> Result<()> {
         if let Some(is_shuffled) = self.is_shuffled {
             self.shuffle(!is_shuffled).await
@@ -264,19 +311,20 @@ impl CurrentlyPlaying {
         }
     }
 
+    /// Seek to a position in the track.
     pub async fn seek(&self, position: u8) -> Result<()> {
         self.spotify
             .seek_track(chrono::Duration::seconds(position.into()), None)
             .await
-            .context(Error::Control("seek position"))
+            .context(Error::Control("seek position".to_owned()))
     }
 
+    /// Play the current track again
     pub async fn replay(&self) -> Result<()> {
         self.seek(0).await
     }
 
-    // play from
-
+    /// Play a track given a URI.
     pub async fn play_from_uri(&self, uri: String) -> Result<()> {
         self.spotify
             .start_uris_playback(
@@ -286,15 +334,15 @@ impl CurrentlyPlaying {
                 None,
             )
             .await
-            .context(Error::Control("play from uri"))
+            .context(Error::Control("play from uri".to_owned()))
     }
 
+    /// Play a track given a URL.
     pub async fn play_from_url(&self, _url: String) -> Result<()> {
         todo!()
     }
 
-    // search
-
+    /// Search for a song.
     pub async fn search(
         &self,
         what: String,
@@ -306,9 +354,9 @@ impl CurrentlyPlaying {
             .spotify
             .search(&what, kind, None, None, Some(limit), Some(offset))
             .await
-            .context(Error::Control("search"))?
+            .context(Error::Control("search".to_owned()))?
         {
-            // yes these lines are necessary
+            // There is no better way to do this, sadly.
             SearchResult::Artists(page) => Ok(serde_json::to_string(&page.items)?),
             SearchResult::Shows(page) => Ok(serde_json::to_string(&page.items)?),
             SearchResult::Albums(page) => Ok(serde_json::to_string(&page.items)?),

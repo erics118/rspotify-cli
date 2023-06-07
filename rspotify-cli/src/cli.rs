@@ -1,6 +1,9 @@
+//! The command line interface for rspotify-cli.
+
 use clap::{value_parser, Parser, Subcommand};
 use rspotify_cli_lib::repeat_state::RepeatState;
 
+/// The CLI.
 #[derive(Debug, Parser, Clone)]
 #[command(
     name = clap::crate_name!(),
@@ -9,10 +12,12 @@ use rspotify_cli_lib::repeat_state::RepeatState;
     about = clap::crate_description!(),
 )]
 pub struct Cli {
+    /// Commands.
     #[command(subcommand)]
     pub command: Commands,
 }
 
+/// Enum of all commands.
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
     /// Print the current status.
@@ -156,7 +161,6 @@ pub enum Commands {
         uri: Option<String>,
     },
 
-    // TODO: add pagination and limit per page options
     /// Search anything
     #[command(arg_required_else_help = true)]
     Search {
@@ -184,9 +188,11 @@ pub enum Commands {
         #[arg(long, group = "aa")]
         episode: Option<String>,
 
+        /// Limit the number of results
         #[arg(long, default_value_t = 5)]
         limit: u32,
 
+        /// Start returning the results from a specific offset
         #[arg(long, default_value_t = 1)]
         offset: u32,
     },

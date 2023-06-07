@@ -1,8 +1,11 @@
+//! Errors for the library
+
 use thiserror::Error;
 
 /// Error states for the CLI
+#[allow(missing_docs)]
 #[derive(Debug, Error)]
-pub enum Error<'a> {
+pub enum Error {
     #[error("The client id or client secret is invalid")]
     Auth,
     #[error("Unable to create authorization URI")]
@@ -10,5 +13,5 @@ pub enum Error<'a> {
     #[error("No active device found")]
     NoActiveDevice,
     #[error("Unable to control song playback: {0}")]
-    Control(&'a str),
+    Control(String),
 }

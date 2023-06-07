@@ -1,11 +1,17 @@
+//! Utility for cycling through cycling through repeat states and serialization
+
+use clap::ValueEnum;
 use rspotify::model::RepeatState as RSpotifyRepeatState;
 use serde::{Deserialize, Serialize};
 
-// Allows for cycling between states and serialization
-#[derive(Debug, Serialize, Deserialize, clap::ValueEnum, Copy, Clone)]
+/// Allows for cycling between states and serialization
+#[derive(Debug, Serialize, Deserialize, ValueEnum, Copy, Clone)]
 pub enum RepeatState {
+    /// No repeat.
     Off,
+    /// Repeat the current playlist or album.
     Context,
+    /// Repeat the current track.
     Track,
 }
 

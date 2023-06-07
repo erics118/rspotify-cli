@@ -1,7 +1,10 @@
+//! Utility to convert duration to nicely formatted string.
+
 use chrono::Duration;
 
-/// Convert duration to nicely formatted string
+/// Convert duration to nicely formatted string.
 pub trait PrettyDuration {
+    /// Convert duration to nicely formatted string.
     fn pretty(self) -> String;
 }
 

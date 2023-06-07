@@ -1,3 +1,5 @@
+//! Configuration for the CLI.
+
 use std::{
     fs::{create_dir_all, OpenOptions},
     path::PathBuf,
@@ -13,20 +15,30 @@ use crate::error::Error;
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum ConfigFile {
+    /// Token file
     Token,
+
+    /// Config file
     Config,
 }
 
 /// Config values
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
+    /// Client id for the Spotify API
     pub client_id: String,
+
+    /// Client secret for the Spotify API
     pub client_secret: String,
+
+    /// Redirect URI for the Spotify API
     pub redirect_uri: String,
+
+    /// Volume increment for the volume increment and decrement commands
     pub volume_increment: u8,
 }
 
-// TODO: move to rspotify-cli instead
+/// Get a config file path from the config directory
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
     let config_dir = home_dir()
         .context(Error::Config)?
@@ -52,7 +64,7 @@ pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
     Ok(config_file)
 }
 
-#[allow(clippy::module_name_repetitions)]
+/// Load config from the config file
 pub fn load_config() -> Result<Config> {
     let config_file = get_config_path(ConfigFile::Config)?;
 
