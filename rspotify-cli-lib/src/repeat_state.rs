@@ -16,7 +16,7 @@ pub enum RepeatState {
 }
 
 impl RepeatState {
-    /// Return the next repeat state to cycle through
+    /// Return the next repeat state to cycle through.
     pub const fn cycle(&self) -> Self {
         match self {
             Self::Off => Self::Context,

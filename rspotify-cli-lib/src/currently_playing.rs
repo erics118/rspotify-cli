@@ -117,7 +117,7 @@ impl CurrentlyPlaying {
         Ok(id.url())
     }
 
-    /// Whether the current song is liked or not
+    /// Whether the current song is liked or not.
     pub async fn is_liked(&self) -> Result<bool> {
         let id = self.id.clone().context(Error::NoActiveDevice)?;
         Ok(*self
@@ -222,7 +222,7 @@ impl CurrentlyPlaying {
         }
     }
 
-    /// Go to the previous track
+    /// Go to the previous track.
     pub async fn previous(&self) -> Result<()> {
         self.spotify
             .previous_track(None)
@@ -230,7 +230,7 @@ impl CurrentlyPlaying {
             .context(Error::Control("go to previous song".to_owned()))
     }
 
-    /// Go to the next track
+    /// Go to the next track.
     pub async fn next(&self) -> Result<()> {
         self.spotify
             .next_track(None)
@@ -246,7 +246,7 @@ impl CurrentlyPlaying {
             .context(Error::Control("set repeat state".to_owned()))
     }
 
-    /// Cycle between the three repeat states
+    /// Cycle between the three repeat states.
     pub async fn cycle_repeat(&self) -> Result<()> {
         if let Some(repeat_state) = self.repeat_state {
             self.spotify
@@ -258,7 +258,7 @@ impl CurrentlyPlaying {
         }
     }
 
-    /// Set the volume
+    /// Set the volume.
     pub async fn set_volume(&self, volume: u8) -> Result<()> {
         if self.volume.is_some() {
             self.spotify
@@ -319,7 +319,7 @@ impl CurrentlyPlaying {
             .context(Error::Control("seek position".to_owned()))
     }
 
-    /// Play the current track again
+    /// Play the current track again.
     pub async fn replay(&self) -> Result<()> {
         self.seek(0).await
     }
@@ -356,7 +356,6 @@ impl CurrentlyPlaying {
             .await
             .context(Error::Control("search".to_owned()))?
         {
-            // There is no better way to do this, sadly.
             SearchResult::Artists(page) => Ok(serde_json::to_string(&page.items)?),
             SearchResult::Shows(page) => Ok(serde_json::to_string(&page.items)?),
             SearchResult::Albums(page) => Ok(serde_json::to_string(&page.items)?),

@@ -11,34 +11,34 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
 
-/// File types stored in the config directory
+/// File types stored in the config directory.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum ConfigFile {
-    /// Token file
+    /// Token file.
     Token,
 
-    /// Config file
+    /// Config file.
     Config,
 }
 
-/// Config values
+/// Config values.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
-    /// Client id for the Spotify API
+    /// Client id for the Spotify API.
     pub client_id: String,
 
-    /// Client secret for the Spotify API
+    /// Client secret for the Spotify API.
     pub client_secret: String,
 
-    /// Redirect URI for the Spotify API
+    /// Redirect URI for the Spotify API.
     pub redirect_uri: String,
 
-    /// Volume increment for the volume increment and decrement commands
+    /// Volume increment for the volume increment and decrement commands.
     pub volume_increment: u8,
 }
 
-/// Get a config file path from the config directory
+/// Get a config file path from the config directory.
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
     let config_dir = home_dir()
         .context(Error::Config)?
