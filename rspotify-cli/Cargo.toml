@@ -19,6 +19,6 @@ chrono = "0.4.26"
 clap = { version = "4.3.11", features = ["derive", "cargo", "env"] }
 config = { version = "0.13.3", features = ["toml"] }
 dirs = "5.0.1"
-serde = { version = "1.0.171", features = ["derive"] }
+serde = { version = "1.0.179", features = ["derive"] }
 thiserror = "1.0.40"
 tokio = { version = "1.29.1", features = ["full"] }
