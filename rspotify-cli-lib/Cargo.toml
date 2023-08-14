@@ -8,7 +8,7 @@ publish = false
 [dependencies]
 anyhow = "1.0.71"
 chrono = "0.4.26"
-clap = { version = "4.3.11", features = ["derive", "cargo", "env"] }
+clap = { version = "4.3.21", features = ["derive", "cargo", "env"] }
 rspotify = { version = "0.11.7", features = ["cli"] }
 serde = { version = "1.0.171", features = ["derive"] }
 serde_json = { version = "1.0.100", features = ["preserve_order"] }
