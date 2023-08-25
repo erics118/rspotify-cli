@@ -10,7 +10,7 @@ use rspotify::{
 };
 use serde_json::json;
 
-use crate::{error::Error, repeat_state::RepeatState};
+use crate::{error::Error, repeat_state::RepeatState, url_convert::url_to_id};
 
 /// Stores current playing state
 #[allow(missing_debug_implementations)]
@@ -379,8 +379,12 @@ impl CurrentlyPlaying {
     }
 
     /// Play a track given a URL.
-    pub async fn play_from_url(&self, _url: String) -> Result<()> {
-        todo!()
+    pub async fn play_from_url(&self, url: String) -> Result<()> {
+        let playable = url_to_id(&url)?;
+        self.spotify
+            .start_uris_playback([playable], None, None, None)
+            .await
+            .context(Error::Control("play from url".to_owned()))
     }
 
     /// Search for a song.

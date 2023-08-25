@@ -5,7 +5,7 @@ use rspotify::model::RepeatState as RSpotifyRepeatState;
 use serde::{Deserialize, Serialize};
 
 /// Allows for cycling between states and serialization
-#[derive(Debug, Serialize, Deserialize, ValueEnum, Copy, Clone)]
+#[derive(ValueEnum, Clone, Debug, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum RepeatState {
     /// No repeat.
     Off,
@@ -43,5 +43,40 @@ impl From<RepeatState> for RSpotifyRepeatState {
             RepeatState::Context => Self::Context,
             RepeatState::Track => Self::Track,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cycle() {
+        let mut state = RepeatState::Off;
+        assert_eq!(state, RepeatState::Off);
+
+        state = state.cycle();
+        assert_eq!(state, RepeatState::Context);
+
+        state = state.cycle();
+        assert_eq!(state, RepeatState::Track);
+
+        state = state.cycle();
+        assert_eq!(state, RepeatState::Off);
+    }
+
+    #[test]
+    fn convert() {
+        let mut state = RSpotifyRepeatState::Off;
+        let converted_state = RepeatState::from(state);
+        assert_eq!(converted_state, RepeatState::Off);
+
+        state = RSpotifyRepeatState::Context;
+        let converted_state = RepeatState::from(state);
+        assert_eq!(converted_state, RepeatState::Context);
+
+        state = RSpotifyRepeatState::Track;
+        let converted_state = RepeatState::from(state);
+        assert_eq!(converted_state, RepeatState::Track);
     }
 }

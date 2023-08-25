@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
         Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
         Commands::Control { replay: true, .. } => curr.replay().await?,
 
-        Commands::PlayFrom { url: Some(_url), .. } => todo!(),
+        Commands::PlayFrom { url: Some(url), .. } =>curr.play_from_url(url).await?,
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
 
         Commands::Search { artist: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Artist, limit, offset).await?),

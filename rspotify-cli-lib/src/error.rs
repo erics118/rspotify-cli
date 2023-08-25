@@ -16,4 +16,6 @@ pub enum Error {
     Control(String),
     #[error("Current playing media must be a track")]
     NotTrack,
+    #[error("Unable to parse the invalid URL")]
+    InvalidURL,
 }
