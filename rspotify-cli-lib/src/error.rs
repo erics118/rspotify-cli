@@ -14,4 +14,6 @@ pub enum Error {
     NoActiveDevice,
     #[error("Unable to control song playback: {0}")]
     Control(String),
+    #[error("Current playing media must be a track")]
+    NotTrack,
 }

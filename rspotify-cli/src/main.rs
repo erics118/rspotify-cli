@@ -87,9 +87,9 @@ async fn main() -> Result<()> {
     #[rustfmt::skip]
     match cli.command {
         // status
-        Commands::Status { json: true, .. } => println!("{}", curr.to_json().await?),
-        Commands::Status { id: true, .. } => println!("{}", curr.id.clone().context(Error::MissingMetadata)?),
-        Commands::Status { url: true, .. } => println!("{}", curr.generate_url()?),
+        Commands::Status { json: true, .. } => println!("{}", curr.to_json().await.context(Error::MissingMetadata)?),
+        Commands::Status { id: true, .. } => println!("{}", curr.id().context(Error::MissingMetadata)?),
+        Commands::Status { url: true, .. } => println!("{}", curr.generate_url().context(Error::MissingMetadata)?),
         Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::MissingMetadata)?),
         Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::MissingMetadata)?),
         Commands::Status { progress: true, .. } => println!("{}", curr.progress.context(Error::MissingMetadata)?.pretty()),
@@ -99,8 +99,8 @@ async fn main() -> Result<()> {
         Commands::Status { is_shuffled: true, .. } => println!("{:?}", curr.is_shuffled.context(Error::MissingMetadata)?),
         Commands::Status { device: true, .. } => println!("{}", curr.device.context(Error::MissingMetadata)?),
         Commands::Status { playing_type: true, .. } => println!("{:?}", curr.playing_type.context(Error::MissingMetadata)?),
-        Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await?),
-        Commands::Status { .. } => println!("{}", curr.display().await?),
+        Commands::Status { is_liked: true, .. } => println!("{}", curr.is_liked().await.context(Error::MissingMetadata)?),
+        Commands::Status { .. } => println!("{}", curr.display().await.context(Error::MissingMetadata)?),
 
         // control
         Commands::Control { play: true, .. } => curr.play().await?,

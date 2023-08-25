@@ -13,13 +13,13 @@ use serde_json::json;
 use crate::{error::Error, repeat_state::RepeatState};
 
 /// Stores current playing state
-#[derive(Debug)]
+#[allow(missing_debug_implementations)]
 pub struct CurrentlyPlaying {
     /// Connector that fetches all the data.
     spotify: AuthCodeSpotify,
 
     /// Track id. Optional because it can be a local file.
-    pub id: Option<TrackId<'static>>,
+    pub id: Option<PlayableId<'static>>,
 
     /// Track title.
     pub title: Option<String>,
@@ -66,7 +66,7 @@ impl CurrentlyPlaying {
                 // TODO: might not work when playing local media
                 PlayableItem::Track(t) => Ok(Self {
                     spotify,
-                    id: t.id,
+                    id: t.id.map(PlayableId::Track),
                     title: Some(t.name),
                     artist: t.artists.first().cloned().map(|a| a.name),
                     progress: curr.progress,
@@ -80,7 +80,7 @@ impl CurrentlyPlaying {
                 }),
                 PlayableItem::Episode(t) => Ok(Self {
                     spotify,
-                    id: None,
+                    id: Some(PlayableId::Episode(t.id)),
                     title: Some(t.name),
                     artist: Some(t.show.name),
                     progress: curr.progress,
@@ -113,40 +113,52 @@ impl CurrentlyPlaying {
 
     /// Returns the URL of the current track.
     pub fn generate_url(&self) -> Result<String> {
-        let id = &self.id.clone().context(Error::NoActiveDevice)?;
-        Ok(id.url())
+        self.id
+            .as_ref()
+            .map_or_else(|| anyhow::bail!(Error::NotTrack), |id| Ok(id.url()))
+    }
+
+    /// Returns the id.
+    pub fn id(&self) -> Result<String> {
+        if let Some(id) = &self.id {
+            Ok(match id {
+                PlayableId::Track(id) => id.to_string(),
+                PlayableId::Episode(id) => id.to_string(),
+            })
+        } else {
+            anyhow::bail!(Error::NoActiveDevice)
+        }
     }
 
     /// Whether the current song is liked or not.
     pub async fn is_liked(&self) -> Result<bool> {
-        let id = self.id.clone().context(Error::NoActiveDevice)?;
-        Ok(*self
-            .spotify
-            .current_user_saved_tracks_contains([id])
-            .await?
-            .first()
-            .context(Error::Control("fetch like status".to_owned()))?)
+        if let Some(PlayableId::Track(id)) = &self.id {
+            Ok(*self
+                .spotify
+                .current_user_saved_tracks_contains([id.clone_static()])
+                .await?
+                .first()
+                .context(Error::Control("fetch like status".to_owned()))?)
+        } else {
+            anyhow::bail!(Error::NotTrack)
+        }
     }
 
     /// Returns the current track's title, artist, and liked status.
     pub async fn display(&self) -> Result<String> {
-        if let Some(title) = &self.title {
-            if let Some(artist) = &self.artist {
-                Ok(format!(
-                    "{} - {} {}",
-                    title,
-                    artist,
-                    if self.is_liked().await? {
-                        // filled heart
-                        "\u{2665}".to_owned()
-                    } else {
-                        // empty heart
-                        "\u{2661}".to_owned()
-                    },
-                ))
-            } else {
-                anyhow::bail!(Error::NoActiveDevice)
-            }
+        if let (Some(title), Some(artist)) = (&self.title, &self.artist) {
+            Ok(format!(
+                "{} - {} {}",
+                title,
+                artist,
+                if self.is_liked().await? {
+                    // filled heart
+                    "\u{2665}".to_owned()
+                } else {
+                    // empty heart
+                    "\u{2661}".to_owned()
+                },
+            ))
         } else {
             anyhow::bail!(Error::NoActiveDevice)
         }
@@ -154,8 +166,12 @@ impl CurrentlyPlaying {
 
     /// Return the metadata of the current track as JSON.
     pub async fn to_json(&self) -> Result<String> {
+        let id = self.id.as_ref().map(|id| match id {
+            PlayableId::Track(track_id) => track_id.to_string(),
+            PlayableId::Episode(episode_id) => episode_id.to_string(),
+        });
         Ok(json!({
-            "id": self.id,
+            "id":id,
             "title": self.title,
             "artist": self.artist,
             "progress": self.progress.context(Error::NoActiveDevice)?.num_seconds(),
@@ -197,20 +213,26 @@ impl CurrentlyPlaying {
 
     /// Like the track.
     pub async fn like(&self) -> Result<()> {
-        let id = self.id.clone().context(Error::NoActiveDevice)?;
-        self.spotify
-            .current_user_saved_tracks_add([id])
-            .await
-            .context(Error::Control("like song".to_owned()))
+        if let Some(PlayableId::Track(id)) = &self.id {
+            self.spotify
+                .current_user_saved_tracks_add([id.clone_static()])
+                .await
+                .context(Error::Control("like song".to_owned()))
+        } else {
+            anyhow::bail!(Error::NotTrack)
+        }
     }
 
     /// Remove like from the song.
     pub async fn unlike(&self) -> Result<()> {
-        let id = self.id.clone().context(Error::NoActiveDevice)?;
-        self.spotify
-            .current_user_saved_tracks_delete([id])
-            .await
-            .context(Error::Control("unlike song".to_owned()))
+        if let Some(PlayableId::Track(id)) = &self.id {
+            self.spotify
+                .current_user_saved_tracks_delete([id.clone_static()])
+                .await
+                .context(Error::Control("unlike song".to_owned()))
+        } else {
+            anyhow::bail!(Error::NotTrack)
+        }
     }
 
     /// Toggle like/unlike.

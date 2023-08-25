@@ -40,16 +40,17 @@ pub struct Config {
 
 /// Get a config file path from the config directory.
 pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
-    let config_dir = home_dir()
-        .context(Error::Config)?
-        .join(".config")
-        .join("rspotify-cli");
+    let config_dir = match std::env::var("XDG_CONFIG_HOME") {
+        Ok(path) => PathBuf::from(path),
+        Err(_) => home_dir().context(Error::Config)?.join(".config"),
+    }
+    .join("rspotify-cli");
 
     if !config_dir.exists() {
         create_dir_all(config_dir.clone())?;
     }
 
-    let config_file = PathBuf::new().join(config_dir).join(match file_name {
+    let config_file = config_dir.join(match file_name {
         ConfigFile::Token => "token.json",
         ConfigFile::Config => "config.toml",
     });
@@ -58,7 +59,8 @@ pub fn get_config_path(file_name: ConfigFile) -> Result<PathBuf> {
         OpenOptions::new()
             .write(true)
             .create_new(true)
-            .open(config_file.clone())?;
+            .open(config_file.clone())
+            .context(Error::Config)?;
     }
 
     Ok(config_file)
