@@ -90,6 +90,7 @@ async fn main() -> Result<()> {
         Commands::Status { json: true, .. } => println!("{}", curr.to_json().await.context(Error::MissingMetadata)?),
         Commands::Status { id: true, .. } => println!("{}", curr.id().context(Error::MissingMetadata)?),
         Commands::Status { url: true, .. } => println!("{}", curr.generate_url().context(Error::MissingMetadata)?),
+        Commands::Status { uri: true, .. } => println!("{}", curr.generate_uri().context(Error::MissingMetadata)?),
         Commands::Status { title: true, .. } => println!("{}", curr.title.context(Error::MissingMetadata)?),
         Commands::Status { artist: true, .. } => println!("{}", curr.artist.context(Error::MissingMetadata)?),
         Commands::Status { progress: true, .. } => println!("{}", curr.progress.context(Error::MissingMetadata)?.pretty()),

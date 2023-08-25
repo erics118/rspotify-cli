@@ -118,6 +118,13 @@ impl CurrentlyPlaying {
             .map_or_else(|| anyhow::bail!(Error::NotTrack), |id| Ok(id.url()))
     }
 
+    /// Returns the URI of the current track.
+    pub fn generate_uri(&self) -> Result<String> {
+        self.id
+            .as_ref()
+            .map_or_else(|| anyhow::bail!(Error::NotTrack), |id| Ok(id.uri()))
+    }
+
     /// Returns the id.
     pub fn id(&self) -> Result<String> {
         if let Some(id) = &self.id {

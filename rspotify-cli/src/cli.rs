@@ -21,7 +21,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand, Clone)]
 pub enum Commands {
     /// Print the current status.
-    /// The API quickly forgets the song if it hasn't been playing for a while.
+    /// The API quickly forgets the song if it has not been playing for a while.
     #[command()]
     Status {
         /// Print the full status in json to be used for external parsing.
@@ -35,6 +35,10 @@ pub enum Commands {
         /// Print the url.
         #[arg(long, help_heading = "Display", exclusive = true)]
         url: bool,
+
+        /// Print the uri.
+        #[arg(long, help_heading = "Display", exclusive = true)]
+        uri: bool,
 
         /// Print the title.
         #[arg(long, help_heading = "Display", exclusive = true)]
@@ -152,11 +156,11 @@ pub enum Commands {
     /// Play songs.
     #[command(arg_required_else_help = true)]
     PlayFrom {
-        /// Play a URL.
+        /// Play a track given a URL.
         #[arg(long, exclusive = true)]
         url: Option<String>,
 
-        /// Play a URI.
+        /// Play a track given a URI.
         #[arg(long, exclusive = true)]
         uri: Option<String>,
     },
@@ -165,27 +169,27 @@ pub enum Commands {
     #[command(arg_required_else_help = true)]
     Search {
         /// Search for artists.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         artist: Option<String>,
 
         /// Search for albums.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         album: Option<String>,
 
         /// Search for tracks.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         track: Option<String>,
 
         /// Search for playlists.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         playlist: Option<String>,
 
         /// Search for shows.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         show: Option<String>,
 
         /// Search for episodes.
-        #[arg(long, group = "aa")]
+        #[arg(long, help_heading = "Filters", exclusive = true)]
         episode: Option<String>,
 
         /// Limit the number of results.

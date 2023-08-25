@@ -1,14 +1,14 @@
 # rspotify-cli
 
-```
-> rspotify-cli --help
+```sh
+> rspotify-cli -h
 
 A cli to get information and control Spotify.
 
 Usage: rspotify-cli <COMMAND>
 
 Commands:
-  status     Print the current status. The API quickly forgets the song if it hasn't been playing for a while
+  status     Print the current status. The API quickly forgets the song if it has not been playing for a while
   control    Control the current playback
   play-from  Play songs
   search     Search anything
@@ -19,10 +19,10 @@ Options:
   -V, --version  Print version
 ```
 
-```
-> cargo q status --help
+```sh
+> rspotify-cli status -h
 
-Print the current status. The API quickly forgets the song if it hasn't been playing for a while
+Print the current status. The API quickly forgets the song if it has not been playing for a while
 
 Usage: rspotify-cli status [OPTIONS]
 
@@ -33,6 +33,7 @@ Options:
 Display:
       --id            Print the id
       --url           Print the url
+      --uri           Print the uri
       --title         Print the title
       --artist        Print the artist name
       --progress      Print the progress
@@ -45,8 +46,8 @@ Display:
       --is-liked      Print if the song is liked
 ```
 
-```
-> rspotify-cli control --help
+```sh
+> rspotify-cli control  -h
 
 Control the current playback
 
@@ -70,20 +71,39 @@ Options:
       --toggle-shuffle   Toggle the shuffle state
       --seek <POSITION>  Seek to a location in the current song in seconds
       --replay           Replay the current song
-  -h, --help             Print help
+  -h, --help             Print help (see more with '--help')
 ```
 
+```sh
+> rspotify-cli play-from -h
+
+Play songs
+
+Usage: rspotify-cli play-from [OPTIONS]
+
+Options:
+      --url <URL>  Play a track given a URL
+      --uri <URI>  Play a track given a URI
+  -h, --help       Print help
 ```
+
+```sh
+> rspotify-cli search -h
+
 Search anything
 
 Usage: rspotify-cli search [OPTIONS]
 
 Options:
+      --limit <LIMIT>    Limit the number of results [default: 5]
+      --offset <OFFSET>  Start returning the results from a specific offset [default: 1]
+  -h, --help             Print help
+
+Filters:
       --artist <ARTIST>      Search for artists
       --album <ALBUM>        Search for albums
       --track <TRACK>        Search for tracks
       --playlist <PLAYLIST>  Search for playlists
       --show <SHOW>          Search for shows
       --episode <EPISODE>    Search for episodes
-  -h, --help                 Print help
 ```
