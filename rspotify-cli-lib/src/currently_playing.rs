@@ -132,15 +132,19 @@ impl CurrentlyPlaying {
 
     /// Whether the current song is liked or not.
     pub async fn is_liked(&self) -> Result<bool> {
-        if let Some(PlayableId::Track(id)) = &self.id {
-            Ok(*self
-                .spotify
-                .current_user_saved_tracks_contains([id.clone_static()])
-                .await?
-                .first()
-                .context(Error::Control("fetch like status".to_owned()))?)
+        if let Some(id) = &self.id {
+            if let PlayableId::Track(id) = id {
+                Ok(*self
+                    .spotify
+                    .current_user_saved_tracks_contains([id.clone_static()])
+                    .await?
+                    .first()
+                    .context(Error::Control("fetch like status".to_owned()))?)
+            } else {
+                anyhow::bail!(Error::NotTrack)
+            }
         } else {
-            anyhow::bail!(Error::NotTrack)
+            anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
@@ -213,25 +217,33 @@ impl CurrentlyPlaying {
 
     /// Like the track.
     pub async fn like(&self) -> Result<()> {
-        if let Some(PlayableId::Track(id)) = &self.id {
-            self.spotify
-                .current_user_saved_tracks_add([id.clone_static()])
-                .await
-                .context(Error::Control("like song".to_owned()))
+        if let Some(id) = &self.id {
+            if let PlayableId::Track(id) = id {
+                self.spotify
+                    .current_user_saved_tracks_add([id.clone_static()])
+                    .await
+                    .context(Error::Control("like song".to_owned()))
+            } else {
+                anyhow::bail!(Error::NotTrack)
+            }
         } else {
-            anyhow::bail!(Error::NotTrack)
+            anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
     /// Remove like from the song.
     pub async fn unlike(&self) -> Result<()> {
-        if let Some(PlayableId::Track(id)) = &self.id {
-            self.spotify
-                .current_user_saved_tracks_delete([id.clone_static()])
-                .await
-                .context(Error::Control("unlike song".to_owned()))
+        if let Some(id) = &self.id {
+            if let PlayableId::Track(id) = id {
+                self.spotify
+                    .current_user_saved_tracks_delete([id.clone_static()])
+                    .await
+                    .context(Error::Control("unlike song".to_owned()))
+            } else {
+                anyhow::bail!(Error::NotTrack)
+            }
         } else {
-            anyhow::bail!(Error::NotTrack)
+            anyhow::bail!(Error::NoActiveDevice)
         }
     }
 
