@@ -122,15 +122,17 @@ async fn main() -> Result<()> {
         Commands::Control { seek: Some(position), .. } => curr.seek(position).await?,
         Commands::Control { replay: true, .. } => curr.replay().await?,
 
-        Commands::PlayFrom { url: Some(url), .. } =>curr.play_from_url(url).await?,
+        // play from
+        Commands::PlayFrom { url: Some(url), .. } => curr.play_from_url(url).await?,
         Commands::PlayFrom { uri: Some(uri), .. } => curr.play_from_uri(uri).await?,
 
-        Commands::Search { artist: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Artist, limit, offset).await?),
-        Commands::Search { album: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Album, limit, offset).await?),
-        Commands::Search { track: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Track, limit, offset).await?),
-        Commands::Search { playlist: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Playlist, limit, offset).await?),
-        Commands::Search { show: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Show, limit, offset).await?),
-        Commands::Search { episode: Some(what), limit, offset,.. } => println!("{}", curr.search(what, SearchType::Episode, limit, offset).await?),
+        // search
+        Commands::Search { artist: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Artist, limit, offset).await?),
+        Commands::Search { album: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Album, limit, offset).await?),
+        Commands::Search { track: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Track, limit, offset).await?),
+        Commands::Search { playlist: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Playlist, limit, offset).await?),
+        Commands::Search { show: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Show, limit, offset).await?),
+        Commands::Search { episode: Some(what), limit, offset, .. } => println!( "{}", curr.search(what, SearchType::Episode, limit, offset).await?),
 
         #[allow(unreachable_patterns)]
         _ => unimplemented!(),
