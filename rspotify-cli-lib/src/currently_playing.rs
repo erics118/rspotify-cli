@@ -4,13 +4,15 @@ use anyhow::{Context, Result};
 use chrono::Duration;
 pub use rspotify::model::enums::types::SearchType;
 use rspotify::{
-    model::{CurrentlyPlayingType, PlayableItem, SearchResult, TrackId},
+    model::{
+        parse_uri, CurrentlyPlayingType, PlayableItem, PlaylistId, SearchResult, TrackId, Type,
+    },
     prelude::*,
     AuthCodeSpotify,
 };
 use serde_json::json;
 
-use crate::{error::Error, repeat_state::RepeatState, url_convert::url_to_id};
+use crate::{error::Error, repeat_state::RepeatState, url_convert::url_to_uri};
 
 /// Stores current playing state
 #[allow(missing_debug_implementations)]
@@ -355,7 +357,7 @@ impl CurrentlyPlaying {
     /// Seek to a position in the track.
     pub async fn seek(&self, position: u8) -> Result<()> {
         self.spotify
-            .seek_track(chrono::Duration::seconds(position.into()), None)
+            .seek_track(Duration::seconds(position.into()), None)
             .await
             .context(Error::Control("seek position".to_owned()))
     }
@@ -367,24 +369,36 @@ impl CurrentlyPlaying {
 
     /// Play a track given a URI.
     pub async fn play_from_uri(&self, uri: String) -> Result<()> {
-        self.spotify
-            .start_uris_playback(
-                [PlayableId::from(TrackId::from_uri(&uri)?)],
-                None,
-                None,
-                None,
-            )
-            .await
-            .context(Error::Control("play from uri".to_owned()))
+        // check if is valid id
+        let (type_, _) = parse_uri(uri.as_str())?;
+
+        if type_ == Type::Track || type_ == Type::Episode {
+            self.spotify
+                .start_uris_playback(
+                    [PlayableId::from(TrackId::from_uri(&uri)?)],
+                    None,
+                    None,
+                    None,
+                )
+                .await
+                .context(Error::Control("play from uri".to_owned()))
+        } else {
+            self.spotify
+                .start_context_playback(
+                    PlayContextId::from(PlaylistId::from_uri(&uri)?),
+                    None,
+                    None,
+                    None,
+                )
+                .await
+                .context(Error::Control("play from uri".to_owned()))
+        }
     }
 
     /// Play a track given a URL.
     pub async fn play_from_url(&self, url: String) -> Result<()> {
-        let playable = url_to_id(&url)?;
-        self.spotify
-            .start_uris_playback([playable], None, None, None)
-            .await
-            .context(Error::Control("play from url".to_owned()))
+        let uri = url_to_uri(&url)?;
+        self.play_from_uri(uri).await
     }
 
     /// Search for a song.
