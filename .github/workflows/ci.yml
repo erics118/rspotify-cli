@@ -9,7 +9,7 @@ env:
 
 jobs:
   check:
-    name: Check
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -17,25 +17,29 @@ jobs:
 
       - name: Install nightly toolchain
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Cargo test
-        run: cargo test --all-features
+      - name: Toolchain info
+        run: |
+          cargo --version --verbose
+          rustc --version
+          cargo clippy --version          
 
-  format:
-    name: Format 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
+      - name: Format
+        run: cargo fmt -- --check
 
-      - name: Install nightly toolchain
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Clippy
+        run: cargo clippy -- -D warnings
 
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
+      - name: Check
+        run: cargo check
+      
+      - name: Test
+        run: cargo test --all          
 
-      - name: Cargo format
-        run: cargo fmt
+      - name: Build
+        run: cargo build --release  
