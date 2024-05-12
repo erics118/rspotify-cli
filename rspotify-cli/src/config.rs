@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use dirs::home_dir;
+use home::home_dir;
 use serde::{Deserialize, Serialize};
 
 use crate::error::Error;
